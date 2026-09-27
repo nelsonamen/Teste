@@ -430,6 +430,25 @@ class SoccerLiveMatchesCard extends LitElement {
 
     if (this._config.filter_competition) matches = matches.filter(match => match.league_name === this._config.filter_competition);
     if (this._config.filter_season) matches = matches.filter(match => match.season_label === this._config.filter_season);
+    // Group filters run before the state filter so a team's own (not-yet-live)
+    // fixture still resolves its group.
+    if (this._config.filter_group) {
+      const wanted = String(this._config.filter_group).toLowerCase();
+      matches = matches.filter(match => String(match.group || '').toLowerCase().includes(wanted));
+    }
+    // "Only my team's group": resolve the group(s) of the fixtures my_team plays
+    // in and keep every match in those groups (so you see the rest of the group,
+    // e.g. the other tournament match on the same matchday).
+    if (this._config.only_my_group === true && this.myTeam) {
+      const groups = new Set(
+        matches
+          .filter(m => String(m.home_team || '').toLowerCase().includes(this.myTeam)
+            || String(m.away_team || '').toLowerCase().includes(this.myTeam))
+          .map(m => String(m.group || '').trim())
+          .filter(Boolean),
+      );
+      if (groups.size) matches = matches.filter(m => groups.has(String(m.group || '').trim()));
+    }
     if (this._config.filter_state) matches = matches.filter(match => match.state === this._config.filter_state);
     if (this._config.filter_venue === 'home' && stateObj.attributes.team_id) matches = matches.filter(match => String(match.home_id) === String(stateObj.attributes.team_id));
     if (this._config.filter_venue === 'away' && stateObj.attributes.team_id) matches = matches.filter(match => String(match.away_id) === String(stateObj.attributes.team_id));

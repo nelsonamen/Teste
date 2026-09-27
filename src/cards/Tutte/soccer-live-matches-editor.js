@@ -95,6 +95,7 @@ class SoccerLiveMatchesEditor extends LitElement {
     const matches = this.hass?.states?.[currentEntity]?.attributes?.matches || [];
     const competitions = [...new Set(matches.map(match => match.league_name).filter(Boolean))].sort();
     const seasons = [...new Set(matches.map(match => match.season_label).filter(Boolean))].sort().reverse();
+    const groups = [...new Set(matches.map(match => match.group).filter(Boolean))].sort();
 
     return html`
       <div class="card-config">
@@ -142,12 +143,26 @@ class SoccerLiveMatchesEditor extends LitElement {
             <option value="away" ?selected=${this._config.filter_venue === 'away'}>${this._t('generic.away')}</option>
           </select>
         </div>
+        ${groups.length ? html`
+        <div>
+          <label class="field-label">${this._t('editor.group_filter')}</label>
+          <select data-config-value="filter_group" @change=${this._selectChanged}>
+            <option value="">${this._t('filter.all')}</option>
+            ${groups.map(value => html`<option value=${value} ?selected=${this._config.filter_group === value}>${value}</option>`)}
+          </select>
+        </div>` : ''}
 
         <div>
           <label class="field-label">${this._t('editor.my_team')}</label>
           <input type="text" placeholder=${this._t('editor.my_team_hint')}
             .value=${this._config.my_team || ''}
             @change=${(e) => this._fireConfigChanged({...this._config, my_team: e.target.value})} />
+        </div>
+
+        <div class="option">
+          <label>${this._t('editor.only_my_group')}</label>
+          <ha-switch .checked=${this._config.only_my_group === true}
+            data-config-value="only_my_group" @change=${this._switchChanged}></ha-switch>
         </div>
 
         <div class="option">

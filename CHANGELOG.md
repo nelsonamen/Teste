@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.56.0 (2026-09-27)
+
+- Matches card: filter by tournament group. Set `filter_group` to a group/stage (e.g. "Group F"), or set `my_team` + `only_my_group: true` to automatically show every match in your team's group — so during a group-stage fixture you also see the other match in the same group, live. The group comes from the provider's match data (`group`); competitions without a group stage are unaffected. Editor exposes a Group dropdown (when the sensor has groups) and an "Only my team's group" toggle. Needs integration v3.23.8+
+
 ## v3.55.0 (2026-09-05)
 
 - Match Center and Matches cards: add a "Hide data by section" option (editor toggle `hide_source_sections`) that removes the per-section source/freshness block from the detail view, for people who don't want it. Off by default, so the block still shows unless you hide it

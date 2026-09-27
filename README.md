@@ -238,11 +238,16 @@ filter_competition: ""
 filter_season: ""
 filter_state: ""       # in / pre / post
 filter_venue: ""       # home / away
+filter_group: ""       # tournament group/stage, e.g. "Group F" (substring, case-insensitive)
+my_team: ""            # highlight this team
+only_my_group: false   # keep only the matches in my_team's group (see the rest of the group)
 show_event_toasts: false
 compact: false         # dense single-line list (like the Minimal card) that still opens the detail popup
 ```
 
 With `compact: true` the card renders a dense single-line list per match (date · time/score · home – away · competition), like the Minimal card, but each row still opens the full detail popup on click.
+
+**Tournament group** — point the card at a competition sensor (e.g. `soccer_live_all_fifa_world`) and either set `filter_group: "Group F"` for a fixed group, or set `my_team` plus `only_my_group: true` to automatically show every match in your team's group — so during *Belgium–France* you also see the other group match *Turkey–Italy* with live scores. The group comes from the provider's match data (ESPN); competitions without a group stage simply leave it empty. Requires integration **v3.23.8+**.
 
 `smart_order: true` puts live matches first, upcoming matches oldest-first and
 finished matches newest-first. It is especially useful with mixed competitions
@@ -699,6 +704,7 @@ Some card features require a minimum version of the [Soccer Live integration](ht
 | Native match-state entities, unified enrichment, capability/season/summary contract and race milestones (schema v8) | v3.16.0 |
 | Adaptive polling and on-demand match-detail discovery (schema v9) | v3.43.0 |
 | Preview/momentum/post-match analysis, setup checklist and request planner (schema v10) | v3.44.0 |
+| Tournament group/stage per match (`group`) for the Matches group filter | v3.23.8 |
 
 Cards degrade gracefully when older integration versions are used — features simply won't appear if the data is absent.
 

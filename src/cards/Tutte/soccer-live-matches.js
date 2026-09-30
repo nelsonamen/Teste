@@ -449,6 +449,12 @@ class SoccerLiveMatchesCard extends LitElement {
       );
       if (groups.size) matches = matches.filter(m => groups.has(String(m.group || '').trim()));
     }
+    // Drop my_team's own fixtures — combine with only_my_group to see just the
+    // rest of the group (e.g. the other group match, not your team's own).
+    if (this._config.exclude_my_team === true && this.myTeam) {
+      matches = matches.filter(m => !(String(m.home_team || '').toLowerCase().includes(this.myTeam)
+        || String(m.away_team || '').toLowerCase().includes(this.myTeam)));
+    }
     if (this._config.filter_state) matches = matches.filter(match => match.state === this._config.filter_state);
     if (this._config.filter_venue === 'home' && stateObj.attributes.team_id) matches = matches.filter(match => String(match.home_id) === String(stateObj.attributes.team_id));
     if (this._config.filter_venue === 'away' && stateObj.attributes.team_id) matches = matches.filter(match => String(match.away_id) === String(stateObj.attributes.team_id));

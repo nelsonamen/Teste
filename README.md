@@ -241,13 +241,14 @@ filter_venue: ""       # home / away
 filter_group: ""       # tournament group/stage, e.g. "Group F" (substring, case-insensitive)
 my_team: ""            # highlight this team
 only_my_group: false   # keep only the matches in my_team's group (see the rest of the group)
+exclude_my_team: false # drop my_team's own match (with only_my_group: just the other group match)
 show_event_toasts: false
 compact: false         # dense single-line list (like the Minimal card) that still opens the detail popup
 ```
 
 With `compact: true` the card renders a dense single-line list per match (date · time/score · home – away · competition), like the Minimal card, but each row still opens the full detail popup on click.
 
-**Tournament group** — point the card at a competition sensor (e.g. `soccer_live_all_fifa_world`) and either set `filter_group: "Group F"` for a fixed group, or set `my_team` plus `only_my_group: true` to automatically show every match in your team's group — so during *Belgium–France* you also see the other group match *Turkey–Italy* with live scores. The group comes from the provider's match data (ESPN); competitions without a group stage simply leave it empty. Requires integration **v3.23.8+**.
+**Tournament group** — point the card at a competition sensor (e.g. `soccer_live_all_fifa_world`) and either set `filter_group: "Group F"` for a fixed group, or set `my_team` plus `only_my_group: true` to automatically show every match in your team's group — so during *Belgium–France* you also see the other group match *Turkey–Italy* with live scores. Add `exclude_my_team: true` to drop your own team's match and show **only** the other group match(es). The group comes from the provider's match data (ESPN); competitions without a group stage simply leave it empty. Requires integration **v3.23.8+**.
 
 `smart_order: true` puts live matches first, upcoming matches oldest-first and
 finished matches newest-first. It is especially useful with mixed competitions

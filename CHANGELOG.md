@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.57.0 (2026-09-28)
+
+- Matches card: add `exclude_my_team` to drop your own team's fixtures. Combined with `only_my_group` it shows just the *other* match(es) in your team's group — e.g. during Belgium–France, only Turkey–Italy. Editor exposes an "Exclude my team's own match" toggle
+
 ## v3.56.0 (2026-09-27)
 
 - Matches card: filter by tournament group. Set `filter_group` to a group/stage (e.g. "Group F"), or set `my_team` + `only_my_group: true` to automatically show every match in your team's group — so during a group-stage fixture you also see the other match in the same group, live. The group comes from the provider's match data (`group`); competitions without a group stage are unaffected. Editor exposes a Group dropdown (when the sensor has groups) and an "Only my team's group" toggle. Needs integration v3.23.8+

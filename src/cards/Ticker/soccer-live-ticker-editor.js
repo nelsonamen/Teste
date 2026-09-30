@@ -86,6 +86,39 @@ class SoccerLiveTickerEditor extends LitElement {
             this._fire(cfg);
           }}>
 
+        <label>${this._t('editor.my_team')}</label>
+        <input type="text"
+          .value=${this._config.my_team || ''}
+          placeholder=${this._t('editor.my_team_hint')}
+          @change=${e => {
+            const v = e.target.value.trim();
+            const cfg = { ...this._config };
+            if (v) cfg.my_team = v; else delete cfg.my_team;
+            this._fire(cfg);
+          }}>
+
+        <label>${this._t('editor.group_filter')}</label>
+        <input type="text"
+          .value=${this._config.filter_group || ''}
+          @change=${e => {
+            const v = e.target.value.trim();
+            const cfg = { ...this._config };
+            if (v) cfg.filter_group = v; else delete cfg.filter_group;
+            this._fire(cfg);
+          }}>
+
+        <label class="toggle-row">
+          <input type="checkbox" ?checked=${!!this._config.only_my_group}
+            @change=${e => this._fire({ ...this._config, only_my_group: e.target.checked })}>
+          ${this._t('editor.only_my_group')}
+        </label>
+
+        <label class="toggle-row">
+          <input type="checkbox" ?checked=${!!this._config.exclude_my_team}
+            @change=${e => this._fire({ ...this._config, exclude_my_team: e.target.checked })}>
+          ${this._t('editor.exclude_my_team')}
+        </label>
+
         <label class="toggle-row">
           <input type="checkbox" ?checked=${!!this._config.hide_when_empty}
             @change=${e => this._fire({ ...this._config, hide_when_empty: e.target.checked })}>

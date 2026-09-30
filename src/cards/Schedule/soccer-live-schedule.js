@@ -40,11 +40,49 @@ class SoccerLiveScheduleCard extends LitElement {
     });
   }
 
+  _groupActive() {
+    return Boolean(this._config.filter_group)
+      || this._config.only_my_group === true
+      || this._config.exclude_my_team === true;
+  }
+
+  _filterGroup(matches) {
+    let out = matches;
+    if (this._config.filter_group) {
+      const wanted = String(this._config.filter_group).toLowerCase();
+      out = out.filter(m => String(m.group || "").toLowerCase().includes(wanted));
+    }
+    const myTeam = (this._config.my_team || "").toLowerCase();
+    if (this._config.only_my_group === true && myTeam) {
+      const groups = new Set(
+        out
+          .filter(m => String(m.home_team || "").toLowerCase().includes(myTeam)
+            || String(m.away_team || "").toLowerCase().includes(myTeam))
+          .map(m => String(m.group || "").trim())
+          .filter(Boolean),
+      );
+      if (groups.size) out = out.filter(m => groups.has(String(m.group || "").trim()));
+    }
+    if (this._config.exclude_my_team === true && myTeam) {
+      out = out.filter(m => !(String(m.home_team || "").toLowerCase().includes(myTeam)
+        || String(m.away_team || "").toLowerCase().includes(myTeam)));
+    }
+    return out;
+  }
+
   _rows(attrs) {
     const show = this._config.show || "upcoming"; // upcoming | previous | all
     const up = attrs.upcoming_matches || [];
     const prev = attrs.previous_matches || [];
     const all = attrs.matches || [];
+    // Group filters need the full match objects (the compact upcoming/previous
+    // lists can omit `group`), so source from `matches` when one is active.
+    if (this._groupActive()) {
+      const base = show === "previous" ? all.filter((m) => m.state === "post")
+        : show === "all" ? all
+        : all.filter((m) => m.state === "pre" || m.state === "in");
+      return this._filterGroup(base);
+    }
     if (show === "previous") return prev.length ? prev : all.filter((m) => m.state === "post");
     if (show === "all") return all.length ? all : [...prev, ...up];
     return up.length ? up : all.filter((m) => m.state === "pre" || m.state === "in");

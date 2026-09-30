@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.58.0 (2026-09-30)
+
+- Extend the tournament-group filters to the **Ticker** and **Minimal** (fixtures) cards: `filter_group`, `my_team` + `only_my_group`, and `exclude_my_team`, matching the Matches card. So a live ticker or a compact list can show just your team's group — or only the other match(es) in it. Editors expose the new fields. Bundle ceiling raised to 770 KiB for the added editor/i18n payload
+
 ## v3.57.0 (2026-09-28)
 
 - Matches card: add `exclude_my_team` to drop your own team's fixtures. Combined with `only_my_group` it shows just the *other* match(es) in your team's group — e.g. during Belgium–France, only Turkey–Italy. Editor exposes an "Exclude my team's own match" toggle

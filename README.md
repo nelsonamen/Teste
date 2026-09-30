@@ -550,7 +550,9 @@ max_matches: 8
 
 Minimal provides compact text-first views for dashboards where the full visual
 cards are too large. The legacy `card_type: schedule` alias still resolves to
-this card.
+this card. The `fixtures` variant also supports the tournament-group filters
+(`filter_group`, `my_team` + `only_my_group`, `exclude_my_team`) like the
+Matches and Ticker cards (integration v3.23.8+).
 
 ### 🧪 Diagnostics
 
@@ -656,6 +658,10 @@ card_type: ticker
 entity: sensor.soccer_live_all_ned_1
 filter: live                  # optional: live / today / empty for all
 competition_filter: "World Cup"  # optional: filter by competition name (case-insensitive substring)
+filter_group: ""              # optional: tournament group/stage, e.g. "Group F"
+my_team: ""                   # optional: your team (for only_my_group / exclude_my_team)
+only_my_group: false          # optional: keep only my_team's group
+exclude_my_team: false        # optional: drop my_team's own match
 auto_scroll: true
 scroll_speed: normal          # slow / normal / fast
 hide_when_empty: true         # hides the card when the filter has no matches
@@ -667,6 +673,8 @@ automatically when you hover over the strip. With `hide_when_empty: true`, a
 live-only ticker disappears when there are no live matches.
 
 **`competition_filter`** — show only matches whose `competition_name` or `league_name` contains the filter string. Useful when the sensor covers multiple competitions (e.g. `all_mixed_*`). If no matches match the filter, the full unfiltered list is shown as fallback.
+
+**Tournament group** — like the Matches card, the Ticker supports `filter_group` (fixed group) and `my_team` + `only_my_group` (your team's group), with `exclude_my_team` to drop your own match. Handy for a live strip of "the rest of my group". Needs integration v3.23.8+.
 
 ---
 
@@ -744,7 +752,7 @@ elements immediately available, loads editors only when opened, targets the
 evergreen browsers supported by Home Assistant and minifies static Lit CSS
 without rewriting the readable source. Shared popup sections and editor styles
 prevent the distinct cards from carrying their own copies. `npm run build`
-reports both raw and gzip size and enforces a 760 KiB ceiling, with a preferred
+reports both raw and gzip size and enforces a 770 KiB ceiling, with a preferred
 720 KiB target. The current bundle is measured during every release build and
 must remain below that enforced ceiling.
 

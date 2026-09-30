@@ -95,6 +95,19 @@ class SoccerLiveScheduleEditor extends LitElement {
         <div class="option">
           <label>${this._t("schedule.show_competition")}</label>
           <ha-switch .checked=${this._config.show_competition !== false} data-config-value="show_competition" @change=${this._toggleChanged}></ha-switch>
+        </div>
+        <div>
+          <label class="field-label">${this._t("editor.group_filter")}</label>
+          <input type="text" .value=${this._config.filter_group || ""}
+            @change=${(e) => this._set("filter_group", e.target.value)} />
+        </div>
+        <div class="option">
+          <label>${this._t("editor.only_my_group")}</label>
+          <ha-switch .checked=${this._config.only_my_group === true} data-config-value="only_my_group" @change=${this._toggleChanged}></ha-switch>
+        </div>
+        <div class="option">
+          <label>${this._t("editor.exclude_my_team")}</label>
+          <ha-switch .checked=${this._config.exclude_my_team === true} data-config-value="exclude_my_team" @change=${this._toggleChanged}></ha-switch>
         </div>` : ""}
         <div class="option">
           <label>${this._t("editor.hide_header")}</label>

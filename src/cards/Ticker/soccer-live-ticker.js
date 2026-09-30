@@ -128,10 +128,33 @@ class SoccerLiveTickerCard extends LitElement {
 
     const sorted = sortMatchesByStateAndDate(matches);
 
+    // Group filters run on the full set first so a team's not-yet-live fixture
+    // still resolves its group, then the live/today filter narrows it.
+    let base = sorted;
+    if (this._config.filter_group) {
+      const wanted = String(this._config.filter_group).toLowerCase();
+      base = base.filter(m => String(m.group || '').toLowerCase().includes(wanted));
+    }
+    const myTeam = (this._config.my_team || '').toLowerCase();
+    if (this._config.only_my_group === true && myTeam) {
+      const groups = new Set(
+        base
+          .filter(m => String(m.home_team || '').toLowerCase().includes(myTeam)
+            || String(m.away_team || '').toLowerCase().includes(myTeam))
+          .map(m => String(m.group || '').trim())
+          .filter(Boolean),
+      );
+      if (groups.size) base = base.filter(m => groups.has(String(m.group || '').trim()));
+    }
+    if (this._config.exclude_my_team === true && myTeam) {
+      base = base.filter(m => !(String(m.home_team || '').toLowerCase().includes(myTeam)
+        || String(m.away_team || '').toLowerCase().includes(myTeam)));
+    }
+
     const filter = this._config.filter;
-    let visible = sorted;
+    let visible = base;
     if (filter === 'live') {
-      visible = sorted.filter(m => m.state === 'in');
+      visible = base.filter(m => m.state === 'in');
     } else if (filter === 'today') {
       // Compare on the displayed local date (DD-MM-YYYY / the ISO YYYY-MM-DD),
       // so "today" matches what the card shows without timezone parsing.
@@ -139,7 +162,7 @@ class SoccerLiveTickerCard extends LitElement {
       const pad = n => String(n).padStart(2, '0');
       const dmy = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
       const ymd = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-      visible = sorted.filter(m =>
+      visible = base.filter(m =>
         String(m.date || '').startsWith(dmy) || String(m.date_iso || '').startsWith(ymd)
       );
     }

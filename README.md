@@ -212,7 +212,10 @@ show_weather: true      # weather badge (default on)
 show_prediction: true   # win-probability prediction (default on)
 show_odds: true         # 1X2 odds (default on)
 show_injuries: true     # injured/suspended players (default on)
+hide_meta: false        # hide the bottom venue/weather/broadcast row
 ```
+
+In **compact mode** the kick-off is shown once (centre); the redundant date badge and the meta-row date are dropped. Use `hide_header` to hide the top bar and `hide_meta` to hide the bottom venue/meta row.
 
 With `show_event_toasts: true`, a goal triggers a full celebration:
 confetti burst, flashing card border, large "GOAL!" banner, score animation and vibration on mobile.

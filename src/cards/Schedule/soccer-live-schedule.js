@@ -34,8 +34,11 @@ class SoccerLiveScheduleCard extends LitElement {
     if (!date) return "";
     const lang = resolveLang(this.hass, this._config);
     const tz = this.hass?.config?.time_zone;
+    // Force 24-hour like every other Soccer Live card (which read the raw 24h
+    // string); without hourCycle, toLocaleTimeString follows the language locale
+    // (e.g. en -> 12h AM/PM), which made the Minimal card inconsistent (#17).
     return date.toLocaleTimeString(lang, {
-      hour: "2-digit", minute: "2-digit",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23",
       ...(tz ? { timeZone: tz } : {}),
     });
   }

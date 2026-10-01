@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.59.0 (2026-10-01)
+
+- Team card (compact): the kick-off time was shown three times (header badge, centre, meta row). Compact mode now shows it once in the centre and drops the header badge date and the meta-row date (#18). Added a `hide_meta` option to hide the bottom venue/weather/broadcast row (the top bar already has `hide_header`)
+- Minimal card: times now display in 24-hour format regardless of the UI language locale, matching the other cards (#17)
+
 ## v3.58.0 (2026-09-30)
 
 - Extend the tournament-group filters to the **Ticker** and **Minimal** (fixtures) cards: `filter_group`, `my_team` + `only_my_group`, and `exclude_my_team`, matching the Matches card. So a live ticker or a compact list can show just your team's group — or only the other match(es) in it. Editors expose the new fields. Bundle ceiling raised to 770 KiB for the added editor/i18n payload

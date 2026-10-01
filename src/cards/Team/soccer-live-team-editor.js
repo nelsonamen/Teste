@@ -184,6 +184,10 @@ class SoccerLiveTeamCardEditor extends LitElement {
           <ha-switch .checked=${this._config.hide_broadcasts === true} data-config-value="hide_broadcasts" @change=${this._switchChanged}></ha-switch>
         </div>
         <div class="option">
+          <label>${this._t('editor.hide_meta')}</label>
+          <ha-switch .checked=${this._config.hide_meta === true} data-config-value="hide_meta" @change=${this._switchChanged}></ha-switch>
+        </div>
+        <div class="option">
           <label>${this._t('editor.compact')}</label>
           <div class="tri" role="radiogroup" aria-label=${this._t('editor.compact')} @keydown=${this._triKeydown}>
             <button type="button" role="radio" class=${compactVal === undefined ? 'sel' : ''} aria-checked=${compactVal === undefined} tabindex=${compactVal === undefined ? '0' : '-1'}

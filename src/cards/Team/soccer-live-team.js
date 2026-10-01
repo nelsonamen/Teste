@@ -401,6 +401,9 @@ class SoccerLiveTeamCard extends LitElement {
     if (state === 'post') {
       return html`<span class="status-badge finished">${this._t('status.finished')}</span>`;
     }
+    // Compact mode shows the kick-off in the centre already, so skip the date
+    // badge here to avoid repeating it (#18).
+    if (this.compact) return '';
     return html`<span class="status-badge scheduled">${match.date || this._t('status.scheduled')}</span>`;
   }
 
@@ -673,11 +676,13 @@ class SoccerLiveTeamCard extends LitElement {
 
         ${isLive ? this._renderStatsRow(match) : ''}
 
-        ${renderMatchMeta(match, {
+        ${this._config.hide_meta === true ? '' : renderMatchMeta(match, {
           lang: resolveLang(this.hass, this._config),
           t: k => this._t(k),
               weatherBadge: (this._config.show_weather !== false) ? (this._weatherBadge || null) : null,
-          showDate: !showScore,
+          // In compact mode the centre already shows the kick-off, so don't
+          // repeat the date in the meta row (#18).
+          showDate: !showScore && !this.compact,
           hideBroadcasts: this._config.hide_broadcasts === true,
         })}
         ${showScore ? html`

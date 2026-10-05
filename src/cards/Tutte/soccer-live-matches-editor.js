@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { t, resolveLang } from '../../i18n.js';
-import { editorStyles, renderLanguageControl } from '../editor-helper.js';
+import { editorStyles, renderLanguageControl, soccerEntityIds } from '../editor-helper.js';
 import { renderSkinControls } from '../skin-editor.js';
 
 class SoccerLiveMatchesEditor extends LitElement {
@@ -83,9 +83,12 @@ class SoccerLiveMatchesEditor extends LitElement {
 
   _fetchEntities() {
     if (!this.hass) return;
-    this.entities = Object.keys(this.hass.states)
-      .filter((entityId) => entityId.includes('soccerlive_all') || entityId.includes('soccer_live_all'))
-      .sort();
+    // Match by sensor_type (language-independent) as well as the English name
+    // pattern, so localized entity_ids like `..._alle_spiele` still appear (#28).
+    this.entities = soccerEntityIds(this.hass, {
+      sensorTypes: ['team_matches', 'team_matches_mixed', 'all_matches_today', 'match_day'],
+      includes: ['soccerlive_all', 'soccer_live_all'],
+    });
   }
 
   render() {

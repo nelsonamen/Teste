@@ -1,5 +1,5 @@
 import { LitElement, html } from 'lit';
-import { editorStyles, renderLanguageControl } from '../editor-helper.js';
+import { editorStyles, renderLanguageControl, soccerEntityIds } from '../editor-helper.js';
 import { t, resolveLang } from '../../i18n.js';
 import { renderSkinControls } from '../skin-editor.js';
 
@@ -94,15 +94,18 @@ class SoccerLiveBracketEditor extends LitElement {
 
   _fetchEntities() {
     if (!this.hass) return;
-    this.entities = Object.keys(this.hass.states)
-      .filter(id => id.includes('soccerlive_bracket') || id.includes('soccer_live_bracket'))
-      .sort();
-    this.standingsEntities = Object.keys(this.hass.states)
-      .filter(id => id.includes('soccerlive_standings') || id.includes('soccer_live_standings'))
-      .sort();
-    this.matchesEntities = Object.keys(this.hass.states)
-      .filter(id => id.includes('soccerlive_all') || id.includes('soccer_live_all'))
-      .sort();
+    // Match by sensor_type too (language-independent), so localized entity_ids
+    // still appear in the dropdowns (#28).
+    this.entities = soccerEntityIds(this.hass, {
+      sensorTypes: ['bracket'], includes: ['soccerlive_bracket', 'soccer_live_bracket'],
+    });
+    this.standingsEntities = soccerEntityIds(this.hass, {
+      sensorTypes: ['standings'], includes: ['soccerlive_standings', 'soccer_live_standings'],
+    });
+    this.matchesEntities = soccerEntityIds(this.hass, {
+      sensorTypes: ['match_day', 'team_matches', 'team_matches_mixed', 'all_matches_today'],
+      includes: ['soccerlive_all', 'soccer_live_all'],
+    });
   }
 
   render() {

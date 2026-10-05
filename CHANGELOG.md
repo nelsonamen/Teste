@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.59.1 (2026-10-05)
+
+- Matches and Bracket editors: the entity dropdowns filtered sensors by their English entity_id (e.g. `..._all_...`), so localized entity_ids like the German `..._alle_spiele` never appeared and the field stayed empty. They now also match on the `sensor_type` attribute (language-independent), so Soccer Live sensors show up in every language (#28)
+
 ## v3.59.0 (2026-10-01)
 
 - Team card (compact): the kick-off time was shown three times (header badge, centre, meta row). Compact mode now shows it once in the centre and drops the header badge date and the meta-row date (#18). Added a `hide_meta` option to hide the bottom venue/weather/broadcast row (the top bar already has `hide_header`)

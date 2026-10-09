@@ -119,7 +119,12 @@ class SoccerLiveCard extends HTMLElement {
     this._hass = hass;
     for (const [id, child] of this._childElements.entries()) {
       const mod = this._getModules().find(m => m.id === id);
-      if (mod && child) child.hass = blendHassSources(hass, mod);
+      if (mod && child) {
+        const resolvedEntity = this._resolveModuleEntity(mod);
+        const modConfig = { skin: this._config.skin, language: this._config.language, ...mod, entity: resolvedEntity, card_type: mod.type };
+        child.hass = blendHassSources(hass, modConfig);
+        child._isLoading = false;
+      }
     }
   }
 
@@ -127,7 +132,6 @@ class SoccerLiveCard extends HTMLElement {
     if (Array.isArray(this._config.modules) && this._config.modules.length > 0) {
       return this._config.modules;
     }
-    // Fallback: auto-discover or construct defaults from models/entity
     const models = discoverSoccerModels(this._hass, this._config);
     const defaults = [];
     if (models.match_model) defaults.push({ id: 'mod_match', type: 'team', title: 'Próximo Jogo', entity: models.match_model });
@@ -142,6 +146,33 @@ class SoccerLiveCard extends HTMLElement {
       defaults.push({ id: 'mod_default', type: this._config.card_type || 'team', title: 'Futebol', entity: this._config.entity });
     }
     return defaults;
+  }
+
+  _resolveModuleEntity(mod) {
+    if (mod.entity && this._hass?.states?.[mod.entity]) {
+      const stateObj = this._hass.states[mod.entity];
+      const sensorType = stateObj?.attributes?.sensor_type;
+      if (sensorType) {
+        if (mod.type === 'team' && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) return mod.entity;
+        if (mod.type === 'standings' && sensorType === 'standings') return mod.entity;
+        if (mod.type === 'scorers' && sensorType === 'top_scorers') return mod.entity;
+        if (mod.type === 'last-match' && (sensorType === 'last_match' || mod.entity.includes('last'))) return mod.entity;
+        if (mod.type === 'news' && sensorType === 'news') return mod.entity;
+        if (mod.type === 'bracket' && sensorType === 'bracket') return mod.entity;
+        if (mod.type === 'club' && sensorType === 'club') return mod.entity;
+      } else {
+        return mod.entity;
+      }
+    }
+    const models = discoverSoccerModels(this._hass, this._config);
+    if (mod.type === 'team' || mod.type === 'match-center') return models.match_model || mod.entity;
+    if (mod.type === 'standings') return models.standings_model || mod.entity;
+    if (mod.type === 'scorers') return models.scorers_model || mod.entity;
+    if (mod.type === 'last-match') return models.last_match_model || mod.entity;
+    if (mod.type === 'news') return models.news_model || mod.entity;
+    if (mod.type === 'bracket') return models.bracket_model || mod.entity;
+    if (mod.type === 'club') return models.club_model || mod.entity;
+    return mod.entity || models.match_model;
   }
 
   setConfig(config) {
@@ -174,7 +205,6 @@ class SoccerLiveCard extends HTMLElement {
       return;
     }
 
-    // Tabs layout mode (default)
     if (!this._tabBar) {
       this.innerHTML = '';
       const wrapper = document.createElement('div');
@@ -257,10 +287,13 @@ class SoccerLiveCard extends HTMLElement {
       this._childElements.set(mod.id, el);
     }
 
+    const resolvedEntity = this._resolveModuleEntity(mod);
+
     const modConfig = {
       skin: this._config.skin,
       language: this._config.language,
       ...mod,
+      entity: resolvedEntity,
       card_type: type,
     };
 
@@ -269,7 +302,10 @@ class SoccerLiveCard extends HTMLElement {
     } catch (e) {
       console.warn(`SoccerLiveCard: setConfig failed for module ${mod.id}:`, e);
     }
-    if (this._hass) el.hass = blendHassSources(this._hass, modConfig);
+    if (this._hass) {
+      el.hass = blendHassSources(this._hass, modConfig);
+      el._isLoading = false;
+    }
     return el;
   }
 
@@ -320,8 +356,7 @@ class SoccerLiveCardEditor extends LitElement {
 
   setConfig(config) {
     this._config = { ...(config || {}) };
-    if (!Array.isArray(this._config.modules)) {
-      // Auto-initialize modules if not set
+    if (!Array.isArray(this._config.modules) || this._config.modules.length === 0) {
       const models = discoverSoccerModels(this.hass, this._config);
       const defaults = [];
       if (models.match_model) defaults.push({ id: 'mod_match', type: 'team', title: 'Próximo Jogo', entity: models.match_model });
@@ -365,11 +400,22 @@ class SoccerLiveCardEditor extends LitElement {
     if (!type) return;
     const item = CARD_REGISTRY.find(c => c.value === type);
     const title = item ? item.label.replace(/^[^\w\s]+\s*/, '') : type;
+    const models = discoverSoccerModels(this.hass, this._config);
+
+    let defaultEntity = '';
+    if (type === 'team') defaultEntity = models.match_model;
+    else if (type === 'standings') defaultEntity = models.standings_model;
+    else if (type === 'scorers') defaultEntity = models.scorers_model;
+    else if (type === 'last-match') defaultEntity = models.last_match_model;
+    else if (type === 'news') defaultEntity = models.news_model;
+    else if (type === 'bracket') defaultEntity = models.bracket_model;
+    else if (type === 'club') defaultEntity = models.club_model;
+
     const newMod = {
       id: `mod_${Date.now()}`,
       type,
       title,
-      entity: '',
+      entity: defaultEntity,
     };
     const modules = [...(this._config.modules || []), newMod];
     this._selectedModuleIndex = modules.length - 1;
@@ -407,7 +453,7 @@ class SoccerLiveCardEditor extends LitElement {
 
   render() {
     const modules = this._config.modules || [];
-    const selectedIdx = Math.min(this._selectedModuleIndex, modules.length - 1);
+    const selectedIdx = Math.min(this._selectedModuleIndex, Math.max(0, modules.length - 1));
     const selectedMod = modules[selectedIdx] || null;
 
     return html`
@@ -426,7 +472,7 @@ class SoccerLiveCardEditor extends LitElement {
           <input
             type="text"
             .value=${this._config.title || ''}
-            placeholder="ex. Feyenoord Rotterdam"
+            placeholder="ex. Futebol"
             @change=${e => this._dispatch({ ...this._config, title: e.target.value })}
           >
         </div>

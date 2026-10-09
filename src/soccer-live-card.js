@@ -130,8 +130,8 @@ class SoccerLiveCard extends HTMLElement {
   }
 
   _getModules() {
-    if (Array.isArray(this._config.modules) && this._config.modules.length > 0) {
-      return this._config.modules;
+    if (Array.isArray(this._config?.modules) && this._config.modules.length > 0) {
+      return this._config.modules.filter(Boolean);
     }
     const models = discoverSoccerModels(this._hass, this._config);
     const defaults = [];
@@ -142,7 +142,7 @@ class SoccerLiveCard extends HTMLElement {
     if (models.bracket_model) defaults.push({ id: 'mod_bracket', type: 'bracket', title: 'Taças', entity: models.bracket_model });
     if (models.club_model) defaults.push({ id: 'mod_club', type: 'club', title: 'Clube', entity: models.club_model });
 
-    if (!defaults.length && this._config.entity) {
+    if (!defaults.length && this._config?.entity) {
       defaults.push({ id: 'mod_default', type: this._config.card_type || 'team', title: 'Futebol', entity: this._config.entity });
     }
     return defaults;
@@ -151,10 +151,13 @@ class SoccerLiveCard extends HTMLElement {
   _getGroupedModules() {
     const modules = this._getModules();
     const groups = new Map();
+    if (!Array.isArray(modules)) return groups;
     for (const mod of modules) {
+      if (!mod) continue;
       const teamName = mod.team || this._config.team || 'Geral';
-      if (!groups.has(teamName)) groups.get(teamName, []);
-      groups.get(teamName).push(mod);
+      if (!groups.has(teamName)) groups.set(teamName, []);
+      const list = groups.get(teamName);
+      if (list) list.push(mod);
     }
     return groups;
   }

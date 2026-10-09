@@ -158,7 +158,9 @@ export function discoverSoccerModels(hass, config = {}) {
 
     if (!matchesContext) continue;
 
-    if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
+    if (sensorType === 'team_match' && (!models.match_model || models.match_model.includes('all_mixed'))) {
+      models.match_model = entityId;
+    } else if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
       models.match_model = entityId;
     } else if (!models.standings_model && sensorType === 'standings') {
       models.standings_model = entityId;

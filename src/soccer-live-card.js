@@ -2,8 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { t, resolveLang } from './i18n.js';
 import { blendHassSources } from "./cards/shared-source-blend.js";
 import { applyEditorProfile, EDITOR_PROFILES } from './cards/editor-profiles.js';
-import { discoverSoccerModels, discoverSoccerTeams } from './cards/editor-helper.js';
-import { renderSkinControls } from './cards/skin-editor.js';
+import { discoverSoccerModels, discoverSoccerTeams, renderAppearanceControl } from './cards/editor-helper.js';
 
 // Card elements stay eagerly registered for backwards-compatible direct YAML
 import './cards/Team/soccer-live-team.js';
@@ -539,7 +538,7 @@ class SoccerLiveCardEditor extends LitElement {
         </div>
 
         <div class="field-group" style="margin-top: 16px; border-top: 1px solid var(--divider-color, rgba(0,0,0,0.1)); padding-top: 12px;">
-          ${renderSkinControls(this, this._config, k => this._t(k))}
+          ${renderAppearanceControl(this, this._config, k => this._t(k))}
         </div>
       </div>
 

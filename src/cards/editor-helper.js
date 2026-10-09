@@ -59,6 +59,28 @@ export function soccerEntityIds(hass, { sensorTypes = [], includes = [] } = {}) 
   }).sort();
 }
 
+export function renderAppearanceControl(host, config, t) {
+  const label = (k) => (typeof t === 'function' ? t(k) : k);
+  const current = config?.appearance || '';
+  const onChange = (e) => {
+    const v = e.target.value;
+    const next = { ...config };
+    if (v) next.appearance = v; else delete next.appearance;
+    fireEditorConfig(host, next);
+  };
+  return html`
+    <div class="field-group">
+      <label class="field-label">${label('skin.appearance')}</label>
+      <select .value=${current} @change=${onChange}>
+        <option value="">— ${label('skin.default')} —</option>
+        <option value="dark" ?selected=${current === 'dark'}>${label('skin.appearance_dark')}</option>
+        <option value="light" ?selected=${current === 'light'}>${label('skin.appearance_light')}</option>
+        <option value="ha" ?selected=${current === 'ha'}>${label('skin.appearance_ha')}</option>
+      </select>
+    </div>
+  `;
+}
+
 const IGNORED_TEAM_NAMES = new Set([
   'classificacao', 'classificacao ligas', 'da configuracao', 'da sincronizacao',
   'estado da configuracao', 'estado da sincronizacao', 'melhores marcadores',

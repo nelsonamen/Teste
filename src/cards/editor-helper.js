@@ -79,33 +79,36 @@ export function discoverSoccerTeams(hass) {
     const attrs = stateObj?.attributes || {};
     const sensorType = attrs.sensor_type || '';
 
-    const isTeamSensor = ['team_match', 'team_matches_mixed', 'team_matches', 'club'].includes(sensorType);
-    const hasTeamAttr = Boolean(attrs.team_name || attrs.team);
-
-    if (!isTeamSensor && !hasTeamAttr && !entityId.includes('next') && !entityId.includes('club')) continue;
+    if (['standings', 'top_scorers', 'bracket', 'news', 'match_day'].includes(sensorType)) continue;
+    if (entityId.includes('standings') || entityId.includes('scorers') || entityId.includes('news') || entityId.includes('bracket')) continue;
 
     let extractedName = attrs.team_name || attrs.team || '';
     if (!extractedName && attrs.friendly_name) {
       const parts = attrs.friendly_name.split(' - ');
-      if (parts.length > 1) extractedName = parts[0];
+      if (parts.length > 1 && !parts[0].toLowerCase().includes('classifica')) extractedName = parts[0];
     }
 
     if (!extractedName) {
       const clean = entityId.replace('sensor.soccer_live_', '').replace('sensor.soccer_', '');
       const segments = clean.split('_');
-      if (segments.length >= 3 && !['standings', 'scorers', 'bracket', 'news'].includes(segments[0])) {
-        extractedName = segments.slice(2).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+      if (segments.length >= 3) {
+        const potential = segments.slice(2).join(' ');
+        if (!potential.includes('standings') && !potential.includes('scorers') && !potential.includes('news')) {
+          extractedName = segments.slice(2).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+        }
       }
     }
 
     if (extractedName && extractedName.length >= 2) {
       const formatted = extractedName.trim();
       const key = formatted.toLowerCase();
-      if (!IGNORED_TEAM_NAMES.has(key) && !teamsMap.has(key)) {
-        teamsMap.set(key, {
-          name: formatted,
-          entity: entityId,
-        });
+      if (!IGNORED_TEAM_NAMES.has(key) && !key.includes('classifica') && !key.includes('marcador') && !key.includes('configuracao')) {
+        if (!teamsMap.has(key)) {
+          teamsMap.set(key, {
+            name: formatted,
+            entity: entityId,
+          });
+        }
       }
     }
   }

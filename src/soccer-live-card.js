@@ -219,7 +219,7 @@ class SoccerLiveCard extends HTMLElement {
 
       this._tabBar = document.createElement('div');
       this._tabBar.className = 'soccer-live-hub-tab-bar';
-      this._tabBar.style.cssText = 'display:flex;gap:6px;overflow-x:auto;padding:8px 12px;margin-bottom:8px;background:var(--card-background-color,rgba(0,0,0,0.05));border-bottom:1px solid var(--divider-color,rgba(255,255,255,0.1));scrollbar-width:none;';
+      this._tabBar.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;margin-bottom:8px;background:var(--card-background-color,rgba(0,0,0,0.03));border-bottom:1px solid var(--divider-color,rgba(0,0,0,0.08));';
 
       this._contentContainer = document.createElement('div');
       this._contentContainer.className = 'soccer-live-hub-content';
@@ -250,18 +250,18 @@ class SoccerLiveCard extends HTMLElement {
       const isActive = mod.id === this._activeModuleId;
       const icon = MODULE_TYPE_ICONS[mod.type] || '⚽';
       btn.style.cssText = `
-        background: ${isActive ? 'var(--primary-color, #03a9f4)' : 'transparent'};
-        color: ${isActive ? '#ffffff' : 'var(--primary-text-color, #ffffff)'};
-        border: 1px solid ${isActive ? 'var(--primary-color, #03a9f4)' : 'var(--divider-color, rgba(255,255,255,0.15))'};
-        border-radius: 20px;
-        padding: 5px 12px;
-        font-size: 12px;
+        background: ${isActive ? 'var(--primary-color, #03a9f4)' : 'var(--card-background-color, #ffffff)'};
+        color: ${isActive ? '#ffffff' : 'var(--primary-text-color, #000000)'};
+        border: 1px solid ${isActive ? 'var(--primary-color, #03a9f4)' : 'var(--divider-color, rgba(0,0,0,0.15))'};
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 13px;
         font-weight: ${isActive ? '700' : '500'};
         cursor: pointer;
-        white-space: nowrap;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
+        box-shadow: ${isActive ? '0 2px 6px rgba(3,169,244,0.3)' : 'none'};
         transition: all 0.2s ease;
       `;
       btn.innerHTML = `<span>${icon}</span> <span>${mod.title || mod.type}</span>`;

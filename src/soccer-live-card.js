@@ -371,11 +371,11 @@ class SoccerLiveCard extends HTMLElement {
     const resolvedEntity = this._resolveModuleEntity(mod);
 
     const modConfig = {
+      ...mod,
       skin: this._config.skin,
       appearance: this._config.appearance || 'ha',
       palette: this._config.palette || 'purple',
       language: this._config.language,
-      ...mod,
       entity: resolvedEntity,
       card_type: type,
     };

@@ -1,7 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { t, resolveLang } from './i18n.js';
 import { blendHassSources } from "./cards/shared-source-blend.js";
-import { applyEditorProfile, EDITOR_PROFILES } from './cards/editor-profiles.js';
 import { discoverSoccerModels, discoverSoccerTeams, renderAppearanceControl } from './cards/editor-helper.js';
 import { applySkin } from './skins.js';
 

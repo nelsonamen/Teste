@@ -293,23 +293,22 @@ class SoccerLiveCard extends HTMLElement {
     // ─── TIER 1: Teams Selector (F1 Style Top Row) ───────────────────────────
     if (teams.length > 1) {
       const teamsRow = document.createElement('div');
-      teamsRow.style.cssText = 'display:flex;gap:16px;padding:12px 16px;background:var(--card-background-color,rgba(0,0,0,0.05));border-bottom:1px solid var(--divider-color,rgba(0,0,0,0.1));overflow-x:auto;scrollbar-width:none;';
+      teamsRow.style.cssText = 'display:flex;gap:10px;padding:12px 16px;background:var(--card-background-color,rgba(0,0,0,0.03));border-bottom:1px solid var(--divider-color,rgba(0,0,0,0.08));overflow-x:auto;scrollbar-width:none;align-items:center;';
       for (const team of teams) {
         const isTeamActive = team === this._activeTeam;
         const btn = document.createElement('button');
         btn.style.cssText = `
-          background: ${isTeamActive ? 'var(--card-background-color, #ffffff)' : 'transparent'};
+          background: var(--card-background-color, #ffffff);
           color: var(--primary-text-color);
-          border: none;
-          padding: 8px 16px;
+          border: ${isTeamActive ? '2px solid var(--primary-text-color, #111111)' : '1px solid var(--divider-color, rgba(0,0,0,0.15))'};
+          padding: ${isTeamActive ? '7px 15px' : '8px 16px'};
           font-size: 13px;
-          font-weight: 700;
+          font-weight: ${isTeamActive ? '700' : '500'};
           letter-spacing: 0.05em;
           text-transform: uppercase;
           cursor: pointer;
-          border-radius: 8px 8px 0 0;
-          border-bottom: 3px solid ${isTeamActive ? 'var(--primary-color, #03a9f4)' : 'transparent'};
-          box-shadow: ${isTeamActive ? '0 2px 4px rgba(0,0,0,0.06)' : 'none'};
+          border-radius: 10px;
+          box-shadow: ${isTeamActive ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : 'none'};
           transition: all 0.2s ease;
           white-space: nowrap;
         `;
@@ -327,22 +326,23 @@ class SoccerLiveCard extends HTMLElement {
 
     // ─── TIER 2: Modules Selector (Bottom Row for Active Team) ────────────────
     const modulesRow = document.createElement('div');
-    modulesRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;background:var(--card-background-color,rgba(0,0,0,0.01));';
+    modulesRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:var(--card-background-color,rgba(0,0,0,0.01));align-items:center;';
     for (const mod of teamModules) {
       const isModActive = mod.id === this._activeModuleId;
       const btn = document.createElement('button');
       btn.style.cssText = `
-        background: ${isModActive ? '#111111' : 'var(--card-background-color, #ffffff)'};
-        color: ${isModActive ? '#ffffff' : 'var(--primary-text-color, #000000)'};
-        border: 1px solid ${isModActive ? '#111111' : 'var(--divider-color, rgba(0,0,0,0.15))'};
+        background: var(--card-background-color, #ffffff);
+        color: var(--primary-text-color);
+        border: ${isModActive ? '2px solid var(--primary-text-color, #111111)' : '1px solid var(--divider-color, rgba(0,0,0,0.15))'};
         border-radius: 10px;
-        padding: 8px 14px;
+        padding: ${isModActive ? '7px 13px' : '8px 14px'};
         font-size: 12px;
         font-weight: ${isModActive ? '700' : '500'};
         text-transform: uppercase;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
+        box-shadow: ${isModActive ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : 'none'};
         transition: all 0.2s ease;
       `;
       btn.textContent = mod.title || mod.type;

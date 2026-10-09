@@ -138,7 +138,6 @@ class SoccerLiveCard extends HTMLElement {
     if (models.standings_model) defaults.push({ id: 'mod_standings', type: 'standings', title: 'Classificação', entity: models.standings_model });
     if (models.last_match_model) defaults.push({ id: 'mod_last', type: 'last-match', title: 'Último Jogo', entity: models.last_match_model });
     if (models.scorers_model) defaults.push({ id: 'mod_scorers', type: 'scorers', title: 'Melhores Marcadores', entity: models.scorers_model });
-    if (models.news_model) defaults.push({ id: 'mod_news', type: 'news', title: 'Notícias', entity: models.news_model });
     if (models.bracket_model) defaults.push({ id: 'mod_bracket', type: 'bracket', title: 'Taças', entity: models.bracket_model });
     if (models.club_model) defaults.push({ id: 'mod_club', type: 'club', title: 'Clube', entity: models.club_model });
 
@@ -300,7 +299,7 @@ class SoccerLiveCard extends HTMLElement {
     try {
       el.setConfig(modConfig);
     } catch (e) {
-      console.warn(`SoccerLiveCard: setConfig failed for module ${mod.id}:`, e);
+      if (modConfig.entity) console.warn(`SoccerLiveCard: setConfig failed for module ${mod.id}:`, e);
     }
     if (this._hass) {
       el.hass = blendHassSources(this._hass, modConfig);
@@ -363,7 +362,6 @@ class SoccerLiveCardEditor extends LitElement {
       if (models.standings_model) defaults.push({ id: 'mod_standings', type: 'standings', title: 'Classificação', entity: models.standings_model });
       if (models.last_match_model) defaults.push({ id: 'mod_last', type: 'last-match', title: 'Último Jogo', entity: models.last_match_model });
       if (models.scorers_model) defaults.push({ id: 'mod_scorers', type: 'scorers', title: 'Melhores Marcadores', entity: models.scorers_model });
-      if (models.news_model) defaults.push({ id: 'mod_news', type: 'news', title: 'Notícias', entity: models.news_model });
       if (models.bracket_model) defaults.push({ id: 'mod_bracket', type: 'bracket', title: 'Taças', entity: models.bracket_model });
       if (models.club_model) defaults.push({ id: 'mod_club', type: 'club', title: 'Clube', entity: models.club_model });
 
@@ -440,14 +438,16 @@ class SoccerLiveCardEditor extends LitElement {
   }
 
   _updateSelectedModule(key, value) {
-    const modules = [...(this._config.modules || [])];
-    const mod = modules[this._selectedModuleIndex];
-    if (!mod) return;
-    if (value === '' || value === null || value === undefined) {
-      delete mod[key];
-    } else {
-      mod[key] = value;
-    }
+    const modules = (this._config.modules || []).map((mod, idx) => {
+      if (idx !== this._selectedModuleIndex) return mod;
+      const nextMod = { ...mod };
+      if (value === '' || value === null || value === undefined) {
+        delete nextMod[key];
+      } else {
+        nextMod[key] = value;
+      }
+      return nextMod;
+    });
     this._dispatch({ ...this._config, modules });
   }
 

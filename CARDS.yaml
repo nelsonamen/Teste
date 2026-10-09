@@ -153,37 +153,19 @@ hide_header: false
 
 ---
 
-# 🏎️/⚽ MODULAR HUB MAIN CARD (F1 Card Style Architecture)
-# Fully modular card with reorderable modules, Add/Duplicate/Remove and Tabs/Stack layout
+# 🏎️/⚽ HUB MAIN CARD (F1 Sensor Style Model Slots)
+# Unified main card with tab bar to switch between match, standings, scorers, last match, news, bracket & club models
 type: custom:soccer-live-hub
-title: "Feyenoord Rotterdam"
-layout: tabs                      # 'tabs' (navigation bar) or 'stack' (vertical list)
+card_type: hub                       # optional (auto-enabled if multiple models configured)
+auto_discover_models: true           # auto-discovers related team/league model sensors
+match_model: sensor.soccer_live_next_ned_1_feyenoord_rotterdam
+standings_model: sensor.soccer_live_standings_ned_1
+scorers_model: sensor.soccer_live_scorers_ned_1
+last_match_model: sensor.soccer_live_last_ned_1_feyenoord_rotterdam
+news_model: sensor.soccer_live_news_ned_1
+club_model: sensor.soccer_live_club_feyenoord_rotterdam
+language: auto
 skin: dark
-modules:
-  - id: "mod_1"
-    type: "team"                  # ⚽ Next Match / Live
-    title: "Próximo Jogo"
-    entity: sensor.soccer_live_next_ned_1_feyenoord_rotterdam
-
-  - id: "mod_2"
-    type: "standings"             # 📊 Standings / Table
-    title: "Classificação"
-    entity: sensor.soccer_live_standings_ned_1
-
-  - id: "mod_3"
-    type: "last-match"            # ⏪ Last Match
-    title: "Último Jogo"
-    entity: sensor.soccer_live_last_ned_1_feyenoord_rotterdam
-
-  - id: "mod_4"
-    type: "scorers"               # 🥇 Top Scorers
-    title: "Melhores Marcadores"
-    entity: sensor.soccer_live_scorers_ned_1
-
-  - id: "mod_5"
-    type: "news"                  # 📰 News Feed
-    title: "Notícias"
-    entity: sensor.soccer_live_news_ned_1
 
 ---
 

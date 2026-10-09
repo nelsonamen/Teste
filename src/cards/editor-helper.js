@@ -59,6 +59,13 @@ export function soccerEntityIds(hass, { sensorTypes = [], includes = [] } = {}) 
   }).sort();
 }
 
+const IGNORED_TEAM_NAMES = new Set([
+  'classificacao', 'classificacao ligas', 'da configuracao', 'da sincronizacao',
+  'estado da configuracao', 'estado da sincronizacao', 'melhores marcadores',
+  'pontape de saida', 'proximo pontape de saida', 'quadro eliminatorio',
+  'todos os jogos', 'diagnosticos', 'resultados', 'noticias', 'standings', 'scorers', 'news'
+]);
+
 /**
  * Auto-discovers all teams/countries configured in the soccerlive integration in Home Assistant.
  */
@@ -70,19 +77,23 @@ export function discoverSoccerTeams(hass) {
   for (const [entityId, stateObj] of Object.entries(hass.states)) {
     if (!entityId.startsWith('sensor.soccer_live_') && !entityId.startsWith('sensor.soccer_')) continue;
     const attrs = stateObj?.attributes || {};
-    const teamName = attrs.team_name || attrs.team || '';
-    const friendlyName = attrs.friendly_name || '';
+    const sensorType = attrs.sensor_type || '';
 
-    let extractedName = teamName;
-    if (!extractedName && friendlyName) {
-      const parts = friendlyName.split(' - ');
+    const isTeamSensor = ['team_match', 'team_matches_mixed', 'team_matches', 'club'].includes(sensorType);
+    const hasTeamAttr = Boolean(attrs.team_name || attrs.team);
+
+    if (!isTeamSensor && !hasTeamAttr && !entityId.includes('next') && !entityId.includes('club')) continue;
+
+    let extractedName = attrs.team_name || attrs.team || '';
+    if (!extractedName && attrs.friendly_name) {
+      const parts = attrs.friendly_name.split(' - ');
       if (parts.length > 1) extractedName = parts[0];
     }
 
     if (!extractedName) {
       const clean = entityId.replace('sensor.soccer_live_', '').replace('sensor.soccer_', '');
       const segments = clean.split('_');
-      if (segments.length >= 3) {
+      if (segments.length >= 3 && !['standings', 'scorers', 'bracket', 'news'].includes(segments[0])) {
         extractedName = segments.slice(2).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
       }
     }
@@ -90,7 +101,7 @@ export function discoverSoccerTeams(hass) {
     if (extractedName && extractedName.length >= 2) {
       const formatted = extractedName.trim();
       const key = formatted.toLowerCase();
-      if (!teamsMap.has(key)) {
+      if (!IGNORED_TEAM_NAMES.has(key) && !teamsMap.has(key)) {
         teamsMap.set(key, {
           name: formatted,
           entity: entityId,

@@ -451,6 +451,23 @@ class SoccerLiveCardEditor extends LitElement {
     this._dispatch({ ...this._config, modules });
   }
 
+  _moduleTeamChanged(teamName) {
+    const modules = (this._config.modules || []).map((mod, idx) => {
+      if (idx !== this._selectedModuleIndex) return mod;
+      const nextMod = { ...mod, team: teamName };
+      if (!teamName) delete nextMod.team;
+      const models = discoverSoccerModels(this.hass, { ...this._config, team: teamName || this._config.team });
+      if (mod.type === 'team' || mod.type === 'match-center') nextMod.entity = models.match_model || mod.entity;
+      else if (mod.type === 'standings') nextMod.entity = models.standings_model || mod.entity;
+      else if (mod.type === 'scorers') nextMod.entity = models.scorers_model || mod.entity;
+      else if (mod.type === 'last-match') nextMod.entity = models.last_match_model || mod.entity;
+      else if (mod.type === 'bracket') nextMod.entity = models.bracket_model || mod.entity;
+      else if (mod.type === 'club') nextMod.entity = models.club_model || mod.entity;
+      return nextMod;
+    });
+    this._dispatch({ ...this._config, modules });
+  }
+
   _teamChanged(teamName) {
     if (!teamName) {
       const next = { ...this._config };
@@ -593,6 +610,19 @@ class SoccerLiveCardEditor extends LitElement {
           </div>
 
           <div class="field-group">
+            <label class="field-label">Equipa do Módulo</label>
+            <select
+              .value=${selectedMod.team || this._config.team || ''}
+              @change=${e => this._moduleTeamChanged(e.target.value)}
+            >
+              <option value="">— Herdar equipa do cartão (${this._config.team || 'Geral'}) —</option>
+              ${availableTeams.map(t => html`
+                <option value=${t.name} ?selected=${(selectedMod.team || this._config.team) === t.name}>${t.name}</option>
+              `)}
+            </select>
+          </div>
+
+          <div class="field-group">
             <label class="field-label">${this._t('editor.module_title')}</label>
             <input
               type="text"
@@ -694,7 +724,7 @@ class SoccerLiveCardEditor extends LitElement {
         margin-bottom: 4px;
         color: var(--secondary-text-color);
       }
-      input[type="text"], select, ha-entity-picker {
+      input[type="text"], select {
         box-sizing: border-box;
         width: 100%;
         padding: 10px 12px;
@@ -703,6 +733,10 @@ class SoccerLiveCardEditor extends LitElement {
         border: 1px solid var(--divider-color, rgba(0,0,0,0.15));
         background: var(--card-background-color, #ffffff);
         color: var(--primary-text-color);
+      }
+      ha-entity-picker {
+        display: block;
+        width: 100%;
       }
       .modules-list {
         display: flex;

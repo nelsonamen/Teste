@@ -3,6 +3,7 @@ import { t, resolveLang } from './i18n.js';
 import { blendHassSources } from "./cards/shared-source-blend.js";
 import { applyEditorProfile, EDITOR_PROFILES } from './cards/editor-profiles.js';
 import { discoverSoccerModels, discoverSoccerTeams } from './cards/editor-helper.js';
+import { renderSkinControls } from './cards/skin-editor.js';
 
 // Card elements stay eagerly registered for backwards-compatible direct YAML
 import './cards/Team/soccer-live-team.js';
@@ -546,6 +547,10 @@ class SoccerLiveCardEditor extends LitElement {
             <option value="tabs" ?selected=${(this._config.layout || 'tabs') === 'tabs'}>${this._t('editor.layout_tabs')}</option>
             <option value="stack" ?selected=${this._config.layout === 'stack'}>${this._t('editor.layout_stack')}</option>
           </select>
+        </div>
+
+        <div class="field-group" style="margin-top: 16px; border-top: 1px solid var(--divider-color, rgba(0,0,0,0.1)); padding-top: 12px;">
+          ${renderSkinControls(this, this._config, k => this._t(k))}
         </div>
       </div>
 

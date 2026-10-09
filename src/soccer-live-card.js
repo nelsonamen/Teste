@@ -291,6 +291,8 @@ class SoccerLiveCard extends HTMLElement {
 
     const modConfig = {
       skin: this._config.skin,
+      appearance: this._config.appearance,
+      palette: this._config.palette,
       language: this._config.language,
       ...mod,
       entity: resolvedEntity,
@@ -513,19 +515,6 @@ class SoccerLiveCardEditor extends LitElement {
             <span class="box-title">${this._t('editor.whole_card')}</span>
             <span class="box-subtitle">${this._t('editor.whole_card_desc')}</span>
           </div>
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">Equipa / Seleção</label>
-          <select
-            .value=${this._config.team || ''}
-            @change=${e => this._teamChanged(e.target.value)}
-          >
-            <option value="">— Escolher equipa —</option>
-            ${availableTeams.map(t => html`
-              <option value=${t.name} ?selected=${this._config.team === t.name}>${t.name}</option>
-            `)}
-          </select>
         </div>
 
         <div class="field-group">

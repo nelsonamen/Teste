@@ -61,21 +61,19 @@ export function soccerEntityIds(hass, { sensorTypes = [], includes = [] } = {}) 
 
 export function renderAppearanceControl(host, config, t) {
   const label = (k) => (typeof t === 'function' ? t(k) : k);
-  const current = config?.appearance || '';
+  const current = config?.appearance || 'ha';
   const onChange = (e) => {
     const v = e.target.value;
-    const next = { ...config };
-    if (v) next.appearance = v; else delete next.appearance;
+    const next = { ...config, appearance: v };
     fireEditorConfig(host, next);
   };
   return html`
     <div class="field-group">
       <label class="field-label">${label('skin.appearance')}</label>
       <select .value=${current} @change=${onChange}>
-        <option value="">— ${label('skin.default')} —</option>
+        <option value="ha" ?selected=${current === 'ha' || !current}>${label('skin.appearance_ha')}</option>
         <option value="dark" ?selected=${current === 'dark'}>${label('skin.appearance_dark')}</option>
         <option value="light" ?selected=${current === 'light'}>${label('skin.appearance_light')}</option>
-        <option value="ha" ?selected=${current === 'ha'}>${label('skin.appearance_ha')}</option>
       </select>
     </div>
   `;

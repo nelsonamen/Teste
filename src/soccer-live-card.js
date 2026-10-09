@@ -3,6 +3,7 @@ import { t, resolveLang } from './i18n.js';
 import { blendHassSources } from "./cards/shared-source-blend.js";
 import { applyEditorProfile, EDITOR_PROFILES } from './cards/editor-profiles.js';
 import { discoverSoccerModels, discoverSoccerTeams, renderAppearanceControl } from './cards/editor-helper.js';
+import { applySkin } from './skins.js';
 
 // Card elements stay eagerly registered for backwards-compatible direct YAML
 import './cards/Team/soccer-live-team.js';
@@ -176,12 +177,14 @@ class SoccerLiveCard extends HTMLElement {
 
   setConfig(config) {
     this._config = config || {};
+    applySkin(this, this._config);
     this._renderCard();
   }
 
   _renderCard() {
     const modules = this._getModules();
     const layout = this._config.layout || 'tabs';
+    applySkin(this, this._config);
 
     if (!modules.length) {
       this.innerHTML = '';
@@ -206,8 +209,9 @@ class SoccerLiveCard extends HTMLElement {
 
     if (!this._tabBar) {
       this.innerHTML = '';
-      const wrapper = document.createElement('div');
+      const wrapper = document.createElement('ha-card');
       wrapper.className = 'soccer-live-hub-wrapper';
+      wrapper.style.cssText = 'border-radius: 20px; overflow: hidden; padding: 0;';
 
       if (this._config.title) {
         const header = document.createElement('div');

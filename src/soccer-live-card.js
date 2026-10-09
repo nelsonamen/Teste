@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { t, resolveLang } from './i18n.js';
 import { blendHassSources } from "./cards/shared-source-blend.js";
 import { applyEditorProfile, EDITOR_PROFILES } from './cards/editor-profiles.js';
-import { discoverSoccerModels } from './cards/editor-helper.js';
+import { discoverSoccerModels, discoverSoccerTeams } from './cards/editor-helper.js';
 
 // Card elements stay eagerly registered for backwards-compatible direct YAML
 import './cards/Team/soccer-live-team.js';
@@ -451,10 +451,40 @@ class SoccerLiveCardEditor extends LitElement {
     this._dispatch({ ...this._config, modules });
   }
 
+  _teamChanged(teamName) {
+    if (!teamName) {
+      const next = { ...this._config };
+      delete next.team;
+      this._dispatch(next);
+      return;
+    }
+
+    const models = discoverSoccerModels(this.hass, { ...this._config, team: teamName });
+    const modules = (this._config.modules || []).map(mod => {
+      const updated = { ...mod };
+      if (mod.type === 'team' || mod.type === 'match-center') updated.entity = models.match_model || mod.entity;
+      else if (mod.type === 'standings') updated.entity = models.standings_model || mod.entity;
+      else if (mod.type === 'scorers') updated.entity = models.scorers_model || mod.entity;
+      else if (mod.type === 'last-match') updated.entity = models.last_match_model || mod.entity;
+      else if (mod.type === 'bracket') updated.entity = models.bracket_model || mod.entity;
+      else if (mod.type === 'club') updated.entity = models.club_model || mod.entity;
+      return updated;
+    });
+
+    const title = (!this._config.title || this._config.title === 'Futebol') ? teamName : this._config.title;
+    this._dispatch({
+      ...this._config,
+      team: teamName,
+      title,
+      modules,
+    });
+  }
+
   render() {
     const modules = this._config.modules || [];
     const selectedIdx = Math.min(this._selectedModuleIndex, Math.max(0, modules.length - 1));
     const selectedMod = modules[selectedIdx] || null;
+    const availableTeams = discoverSoccerTeams(this.hass);
 
     return html`
       <!-- WHOLE CARD SECTION -->
@@ -465,6 +495,19 @@ class SoccerLiveCardEditor extends LitElement {
             <span class="box-title">${this._t('editor.whole_card')}</span>
             <span class="box-subtitle">${this._t('editor.whole_card_desc')}</span>
           </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Equipa / Seleção</label>
+          <select
+            .value=${this._config.team || ''}
+            @change=${e => this._teamChanged(e.target.value)}
+          >
+            <option value="">— Escolher equipa —</option>
+            ${availableTeams.map(t => html`
+              <option value=${t.name} ?selected=${this._config.team === t.name}>${t.name}</option>
+            `)}
+          </select>
         </div>
 
         <div class="field-group">

@@ -60,6 +60,49 @@ export function soccerEntityIds(hass, { sensorTypes = [], includes = [] } = {}) 
 }
 
 /**
+ * Auto-discovers all teams/countries configured in the soccerlive integration in Home Assistant.
+ */
+export function discoverSoccerTeams(hass) {
+  if (!hass?.states) return [];
+
+  const teamsMap = new Map();
+
+  for (const [entityId, stateObj] of Object.entries(hass.states)) {
+    if (!entityId.startsWith('sensor.soccer_live_') && !entityId.startsWith('sensor.soccer_')) continue;
+    const attrs = stateObj?.attributes || {};
+    const teamName = attrs.team_name || attrs.team || '';
+    const friendlyName = attrs.friendly_name || '';
+
+    let extractedName = teamName;
+    if (!extractedName && friendlyName) {
+      const parts = friendlyName.split(' - ');
+      if (parts.length > 1) extractedName = parts[0];
+    }
+
+    if (!extractedName) {
+      const clean = entityId.replace('sensor.soccer_live_', '').replace('sensor.soccer_', '');
+      const segments = clean.split('_');
+      if (segments.length >= 3) {
+        extractedName = segments.slice(2).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+      }
+    }
+
+    if (extractedName && extractedName.length >= 2) {
+      const formatted = extractedName.trim();
+      const key = formatted.toLowerCase();
+      if (!teamsMap.has(key)) {
+        teamsMap.set(key, {
+          name: formatted,
+          entity: entityId,
+        });
+      }
+    }
+  }
+
+  return Array.from(teamsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
  * Auto-discovers and resolves model entities for F1-sensor style Hub configuration.
  */
 export function discoverSoccerModels(hass, config = {}) {
@@ -76,30 +119,30 @@ export function discoverSoccerModels(hass, config = {}) {
   if (!hass?.states) return models;
 
   const baseEntity = config.match_model || config.entity || config.club_model || '';
-  if (!baseEntity) return models;
-
-  const baseState = hass.states[baseEntity];
-  const teamName = baseState?.attributes?.team_name || baseState?.attributes?.team || '';
+  const baseState = baseEntity ? hass.states[baseEntity] : null;
+  const teamName = config.team || baseState?.attributes?.team_name || baseState?.attributes?.team || '';
   const leagueName = baseState?.attributes?.league_id || baseState?.attributes?.league || '';
 
-  // Clean key for matching (e.g. 'feyenoord' or 'ned_1')
+  // Clean key for matching (e.g. 'feyenoord', 'fcporto', 'portugal', or 'ned_1')
   const cleanKey = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const keyTeam = cleanKey(teamName);
   const keyLeague = cleanKey(leagueName);
-  const baseKey = cleanKey(baseEntity.replace('sensor.', '').replace('soccer_live_', ''));
+  const baseKey = baseEntity ? cleanKey(baseEntity.replace('sensor.', '').replace('soccer_live_', '')) : '';
 
   for (const [entityId, stateObj] of Object.entries(hass.states)) {
     if (!entityId.startsWith('sensor.')) continue;
     const sensorType = stateObj?.attributes?.sensor_type || '';
     const cleanId = cleanKey(entityId);
+    const attrTeam = cleanKey(stateObj?.attributes?.team_name || stateObj?.attributes?.team);
 
     const matchesContext = (
+      (keyTeam && (cleanId.includes(keyTeam) || attrTeam.includes(keyTeam))) ||
       (baseKey && cleanId.includes(baseKey)) ||
-      (keyTeam && cleanId.includes(keyTeam)) ||
-      (keyLeague && cleanId.includes(keyLeague))
+      (keyLeague && cleanId.includes(keyLeague)) ||
+      config.auto_discover_models === true
     );
 
-    if (!matchesContext && config.auto_discover_models !== true) continue;
+    if (!matchesContext) continue;
 
     if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
       models.match_model = entityId;
@@ -107,7 +150,7 @@ export function discoverSoccerModels(hass, config = {}) {
       models.standings_model = entityId;
     } else if (!models.scorers_model && sensorType === 'top_scorers') {
       models.scorers_model = entityId;
-    } else if (!models.last_match_model && (sensorType === 'last_match' || cleanId.includes('last_match'))) {
+    } else if (!models.last_match_model && (sensorType === 'last_match' || cleanId.includes('last_match') || cleanId.includes('last'))) {
       models.last_match_model = entityId;
     } else if (!models.news_model && sensorType === 'news') {
       models.news_model = entityId;

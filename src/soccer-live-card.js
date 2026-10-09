@@ -176,7 +176,7 @@ const SHARED_FIELDS = [
   'archive_entity', 'standings_entity', 'skin', 'language', 'show_event_toasts'
 ];
 
-const WRAPPER_TYPE = 'custom:soccer-live-card';
+const WRAPPER_TYPE = 'custom:soccer-live-hub';
 
 // ─── Wrapper card ─────────────────────────────────────────────────────────────
 
@@ -399,7 +399,7 @@ class SoccerLiveCard extends HTMLElement {
   }
 
   static getConfigElement() {
-    return document.createElement('soccer-live-card-editor');
+    return document.createElement('soccer-live-hub-editor');
   }
 
   static getStubConfig() {
@@ -407,8 +407,8 @@ class SoccerLiveCard extends HTMLElement {
   }
 }
 
-if (!customElements.get('soccer-live-card')) {
-  customElements.define('soccer-live-card', SoccerLiveCard);
+if (!customElements.get('soccer-live-hub')) {
+  customElements.define('soccer-live-hub', SoccerLiveCard);
 }
 
 // ─── Wrapper editor ───────────────────────────────────────────────────────────
@@ -745,19 +745,19 @@ class SoccerLiveCardEditor extends LitElement {
   }
 }
 
-if (!customElements.get('soccer-live-card-editor')) {
-  customElements.define('soccer-live-card-editor', SoccerLiveCardEditor);
+if (!customElements.get('soccer-live-hub-editor')) {
+  customElements.define('soccer-live-hub-editor', SoccerLiveCardEditor);
 }
 
 // ─── Single customCards entry ─────────────────────────────────────────────────
 
 window.customCards = window.customCards || [];
-if (!window.customCards.some(c => c.type === 'soccer-live-card')) {
+if (!window.customCards.some(c => c.type === 'soccer-live-hub')) {
   window.customCards.push({
-    type: 'soccer-live-card',
-    name: 'Soccer Live Card',
-    description: 'Live football scores, standings, lineup, countdown, news and more.',
+    type: 'soccer-live-hub',
+    name: 'Soccer Live Hub Card',
+    description: 'Unified football hub card with model slots and auto-discovery.',
     preview: false,
-    documentationURL: 'https://github.com/rononline/soccerlive-card',
+    documentationURL: 'https://github.com/nelsonamen/Teste',
   });
 }

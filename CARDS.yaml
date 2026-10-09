@@ -155,7 +155,7 @@ hide_header: false
 
 # 🏎️/⚽ HUB MAIN CARD (F1 Sensor Style Model Slots)
 # Unified main card with tab bar to switch between match, standings, scorers, last match, news, bracket & club models
-type: custom:soccer-live-card
+type: custom:soccer-live-hub
 card_type: hub                       # optional (auto-enabled if multiple models configured)
 auto_discover_models: true           # auto-discovers related team/league model sensors
 match_model: sensor.soccer_live_next_ned_1_feyenoord_rotterdam

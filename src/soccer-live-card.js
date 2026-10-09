@@ -2,6 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { t, resolveLang } from './i18n.js';
 import { blendHassSources } from "./cards/shared-source-blend.js";
 import { applyEditorProfile, EDITOR_PROFILES } from './cards/editor-profiles.js';
+import { discoverSoccerModels } from './cards/editor-helper.js';
 // Card elements stay eagerly registered for backwards-compatible direct YAML
 // (`custom:soccer-live-team`, etc.). Home Assistant may call setConfig
 // immediately after creating such an element, before an async import settles.
@@ -168,7 +169,12 @@ function resolveElement(cardType) {
 }
 
 // Shared config fields preserved when switching card type
-const SHARED_FIELDS = ['entity', 'enrichment_entity', 'supplementary_entities', 'auto_enrichment', 'archive_entity', 'standings_entity', 'skin', 'language', 'show_event_toasts'];
+const SHARED_FIELDS = [
+  'entity', 'match_model', 'standings_model', 'scorers_model', 'last_match_model',
+  'news_model', 'bracket_model', 'club_model', 'auto_discover_models',
+  'enrichment_entity', 'supplementary_entities', 'auto_enrichment',
+  'archive_entity', 'standings_entity', 'skin', 'language', 'show_event_toasts'
+];
 
 const WRAPPER_TYPE = 'custom:soccer-live-card';
 
@@ -181,16 +187,85 @@ class SoccerLiveCard extends HTMLElement {
     this._config = {};
     this._child = null;
     this._childType = null;
+    this._activeHubTab = null;
+    this._tabBar = null;
+    this._contentContainer = null;
   }
 
   set hass(hass) {
     this._hass = hass;
-    if (this._child) this._child.hass = blendHassSources(hass, this._config);
+    if (this._child) this._child.hass = blendHassSources(hass, this._getChildConfig());
+  }
+
+  _getModels() {
+    return discoverSoccerModels(this._hass, this._config);
+  }
+
+  _getHubTabs() {
+    const models = this._getModels();
+    const tabs = [];
+    if (models.match_model) tabs.push({ id: 'match', label: this._t('hub.tab_match'), icon: '⚽', type: 'team', entity: models.match_model });
+    if (models.standings_model) tabs.push({ id: 'standings', label: this._t('hub.tab_standings'), icon: '📊', type: 'standings', entity: models.standings_model });
+    if (models.scorers_model) tabs.push({ id: 'scorers', label: this._t('hub.tab_scorers'), icon: '🥇', type: 'scorers', entity: models.scorers_model });
+    if (models.last_match_model) tabs.push({ id: 'last_match', label: this._t('hub.tab_last_match'), icon: '⏪', type: 'last-match', entity: models.last_match_model });
+    if (models.news_model) tabs.push({ id: 'news', label: this._t('hub.tab_news'), icon: '📰', type: 'news', entity: models.news_model });
+    if (models.bracket_model) tabs.push({ id: 'bracket', label: this._t('hub.tab_bracket'), icon: '🏆', type: 'bracket', entity: models.bracket_model });
+    if (models.club_model) tabs.push({ id: 'club', label: this._t('hub.tab_club'), icon: '🏢', type: 'club', entity: models.club_model });
+    return tabs;
+  }
+
+  _isHubMode() {
+    const cardType = this._config.card_type;
+    if (cardType === 'hub' || cardType === 'main') return true;
+    if (!cardType) {
+      const tabs = this._getHubTabs();
+      return tabs.length > 1;
+    }
+    return false;
+  }
+
+  _getChildConfig() {
+    if (!this._isHubMode()) {
+      const models = this._getModels();
+      const type = this._config.card_type || 'team';
+      let entity = this._config.entity;
+      if (!entity) {
+        if (type === 'standings') entity = models.standings_model;
+        else if (type === 'scorers') entity = models.scorers_model;
+        else if (type === 'last-match') entity = models.last_match_model;
+        else if (type === 'news') entity = models.news_model;
+        else if (type === 'bracket') entity = models.bracket_model;
+        else if (type === 'club') entity = models.club_model;
+        else entity = models.match_model;
+      }
+      return { ...this._config, entity };
+    }
+
+    const tabs = this._getHubTabs();
+    if (!tabs.length) return this._config;
+
+    let activeTabObj = tabs.find(t => t.id === this._activeHubTab);
+    if (!activeTabObj) {
+      activeTabObj = tabs[0];
+      this._activeHubTab = activeTabObj.id;
+    }
+
+    return {
+      ...this._config,
+      card_type: activeTabObj.type,
+      entity: activeTabObj.entity,
+    };
   }
 
   setConfig(config) {
     this._config = config || {};
-    const type = this._config.card_type;
+    this._renderCard();
+  }
+
+  _renderCard() {
+    const isHub = this._isHubMode();
+    const childConfig = this._getChildConfig();
+    const type = childConfig.card_type || (isHub ? 'team' : this._config.card_type);
     const element = type ? resolveElement(type) : null;
 
     if (!element) {
@@ -203,27 +278,90 @@ class SoccerLiveCard extends HTMLElement {
     if (!customElements.get(element)) {
       this._destroyChild();
       this.innerHTML = '';
-      // Card modules are eager for direct-YAML compatibility. A missing
-      // registration is a real load failure, not an async module to retry.
       this.appendChild(this._errorCard(this._t('ui.unknown_card_type', { type })));
       return;
     }
 
-    // (Re)create child only when the element type changes
-    if (this._childType !== element) {
-      this._destroyChild();
-      this._child = document.createElement(element);
-      this._childType = element;
-      this.innerHTML = '';
-      this.appendChild(this._child);
+    if (isHub) {
+      if (!this._tabBar) {
+        this.innerHTML = '';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'soccer-live-hub-wrapper';
+
+        this._tabBar = document.createElement('div');
+        this._tabBar.className = 'soccer-live-hub-tab-bar';
+        this._tabBar.style.cssText = 'display:flex;gap:6px;overflow-x:auto;padding:8px 12px;margin-bottom:8px;background:var(--card-background-color,rgba(0,0,0,0.05));border-bottom:1px solid var(--divider-color,rgba(255,255,255,0.1));border-radius:12px 12px 0 0;scrollbar-width:none;';
+
+        this._contentContainer = document.createElement('div');
+        this._contentContainer.className = 'soccer-live-hub-content';
+
+        wrapper.appendChild(this._tabBar);
+        wrapper.appendChild(this._contentContainer);
+        this.appendChild(wrapper);
+      }
+
+      this._updateTabBar();
+
+      if (this._childType !== element) {
+        this._contentContainer.innerHTML = '';
+        this._child = document.createElement(element);
+        this._childType = element;
+        this._contentContainer.appendChild(this._child);
+      }
+    } else {
+      if (this._tabBar) {
+        this._destroyChild();
+        this._tabBar = null;
+        this._contentContainer = null;
+        this.innerHTML = '';
+      }
+
+      if (this._childType !== element) {
+        this._destroyChild();
+        this._child = document.createElement(element);
+        this._childType = element;
+        this.innerHTML = '';
+        this.appendChild(this._child);
+      }
     }
 
     try {
-      this._child.setConfig(this._config);
+      this._child.setConfig(childConfig);
     } catch (e) {
-      if (this._config.entity) console.warn(`SoccerLiveCard: setConfig failed for ${this._childType}:`, e);
+      if (childConfig.entity) console.warn(`SoccerLiveCard: setConfig failed for ${this._childType}:`, e);
     }
-    if (this._hass) this._child.hass = blendHassSources(this._hass, this._config);
+    if (this._hass) this._child.hass = blendHassSources(this._hass, childConfig);
+  }
+
+  _updateTabBar() {
+    if (!this._tabBar) return;
+    const tabs = this._getHubTabs();
+    this._tabBar.innerHTML = '';
+    for (const tab of tabs) {
+      const btn = document.createElement('button');
+      const isActive = tab.id === this._activeHubTab;
+      btn.style.cssText = `
+        background: ${isActive ? 'var(--primary-color, #03a9f4)' : 'transparent'};
+        color: ${isActive ? '#ffffff' : 'var(--primary-text-color, #ffffff)'};
+        border: 1px solid ${isActive ? 'var(--primary-color, #03a9f4)' : 'var(--divider-color, rgba(255,255,255,0.15))'};
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: ${isActive ? '700' : '500'};
+        cursor: pointer;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+      `;
+      btn.innerHTML = `<span>${tab.icon}</span> <span>${tab.label}</span>`;
+      btn.addEventListener('click', () => {
+        this._activeHubTab = tab.id;
+        this._renderCard();
+      });
+      this._tabBar.appendChild(btn);
+    }
   }
 
   _destroyChild() {
@@ -457,6 +595,49 @@ class SoccerLiveCardEditor extends LitElement {
         </select>
         ${meta ? html`<p class="picker-desc">${meta.description}</p>` : ''}
         ${this._sensorHint(meta)}
+
+        <details class="model-slots-details" open style="margin-top: 14px;">
+          <summary style="cursor: pointer; font-size: 13px; font-weight: 700; color: var(--secondary-text-color);">${this._t('editor.hub_models')}</summary>
+          <div class="model-slots-wrap" style="padding-top: 8px;">
+            <label class="enrichment-auto">
+              <span>${this._t('editor.auto_discover_models')}</span>
+              <ha-switch
+                .checked=${this._config.auto_discover_models === true}
+                @change=${event => this._dispatch({ ...this._config, auto_discover_models: event.target.checked })}
+              ></ha-switch>
+              <small>${this._t('editor.auto_discover_models_hint')}</small>
+            </label>
+
+            ${[
+              ['match_model', 'editor.match_model'],
+              ['standings_model', 'editor.standings_model'],
+              ['scorers_model', 'editor.scorers_model'],
+              ['last_match_model', 'editor.last_match_model'],
+              ['news_model', 'editor.news_model'],
+              ['bracket_model', 'editor.bracket_model'],
+              ['club_model', 'editor.club_model'],
+            ].map(([key, labelKey]) => html`
+              <label class="enrichment-picker">
+                <span>${this._t(labelKey)}</span>
+                <ha-entity-picker
+                  .hass=${this.hass}
+                  .value=${this._config[key] || ''}
+                  .includeDomains=${['sensor']}
+                  allow-custom-entity
+                  @value-changed=${event => {
+                    const value = event.detail?.value || '';
+                    if (value === (this._config[key] || '')) return;
+                    const next = { ...this._config };
+                    if (value) next[key] = value;
+                    else delete next[key];
+                    this._dispatch(next);
+                  }}
+                ></ha-entity-picker>
+              </label>
+            `)}
+          </div>
+        </details>
+
         <label class="enrichment-picker">
           <span>${t('editor.enrichment_entity', resolveLang(this.hass, this._config))}</span>
           <ha-entity-picker

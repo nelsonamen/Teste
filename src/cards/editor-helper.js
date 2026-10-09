@@ -60,6 +60,68 @@ export function soccerEntityIds(hass, { sensorTypes = [], includes = [] } = {}) 
 }
 
 /**
+ * Auto-discovers and resolves model entities for F1-sensor style Hub configuration.
+ */
+export function discoverSoccerModels(hass, config = {}) {
+  const models = {
+    match_model: config.match_model || config.entity || '',
+    standings_model: config.standings_model || config.standings_entity || '',
+    scorers_model: config.scorers_model || '',
+    last_match_model: config.last_match_model || '',
+    news_model: config.news_model || '',
+    bracket_model: config.bracket_model || '',
+    club_model: config.club_model || '',
+  };
+
+  if (!hass?.states) return models;
+
+  const baseEntity = config.match_model || config.entity || config.club_model || '';
+  if (!baseEntity) return models;
+
+  const baseState = hass.states[baseEntity];
+  const teamName = baseState?.attributes?.team_name || baseState?.attributes?.team || '';
+  const leagueName = baseState?.attributes?.league_id || baseState?.attributes?.league || '';
+
+  // Clean key for matching (e.g. 'feyenoord' or 'ned_1')
+  const cleanKey = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const keyTeam = cleanKey(teamName);
+  const keyLeague = cleanKey(leagueName);
+  const baseKey = cleanKey(baseEntity.replace('sensor.', '').replace('soccer_live_', ''));
+
+  for (const [entityId, stateObj] of Object.entries(hass.states)) {
+    if (!entityId.startsWith('sensor.')) continue;
+    const sensorType = stateObj?.attributes?.sensor_type || '';
+    const cleanId = cleanKey(entityId);
+
+    const matchesContext = (
+      (baseKey && cleanId.includes(baseKey)) ||
+      (keyTeam && cleanId.includes(keyTeam)) ||
+      (keyLeague && cleanId.includes(keyLeague))
+    );
+
+    if (!matchesContext && config.auto_discover_models !== true) continue;
+
+    if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
+      models.match_model = entityId;
+    } else if (!models.standings_model && sensorType === 'standings') {
+      models.standings_model = entityId;
+    } else if (!models.scorers_model && sensorType === 'top_scorers') {
+      models.scorers_model = entityId;
+    } else if (!models.last_match_model && (sensorType === 'last_match' || cleanId.includes('last_match'))) {
+      models.last_match_model = entityId;
+    } else if (!models.news_model && sensorType === 'news') {
+      models.news_model = entityId;
+    } else if (!models.bracket_model && sensorType === 'bracket') {
+      models.bracket_model = entityId;
+    } else if (!models.club_model && sensorType === 'club') {
+      models.club_model = entityId;
+    }
+  }
+
+  return models;
+}
+
+/**
  * Shared language selector. The empty option inherits the language (the sensor's
  * shared card_defaults.language if set, else the HA locale) and shows that
  * explicitly, e.g. "nl · shared", consistently across every card editor.

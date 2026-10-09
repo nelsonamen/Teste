@@ -66,16 +66,16 @@ function loadCardModule(type, kind) {
 }
 
 const CARD_REGISTRY = [
-  { value: 'team',              element: 'soccer-live-team',              label: '⚽ Próximo Jogo / Ao Vivo', description: 'Placar ao vivo, relógio, alinhamento e tempo' },
-  { value: 'standings',         element: 'soccer-live-standings',         label: '📊 Classificação',         description: 'Tabela classificativa da liga' },
-  { value: 'last-match',        element: 'soccer-live-last-match',        label: '⏪ Último Jogo',            description: 'Resultado do último jogo terminado' },
-  { value: 'scorers',           element: 'soccer-live-scorers',           label: '🥇 Melhores Marcadores',   description: 'Tabela dos melhores marcadores' },
-  { value: 'news',              element: 'soccer-live-news',              label: '📰 Notícias',              description: 'Feed de artigos e notícias' },
-  { value: 'bracket',           element: 'soccer-live-bracket',           label: '🏆 Taça / Eliminatórias',  description: 'Árvore de eliminatórias e taças' },
-  { value: 'club',              element: 'soccer-live-club',              label: '🏢 Perfil do Clube',       description: 'Perfil completo com plantel e transferências' },
-  { value: 'countdown',         element: 'soccer-live-countdown',         label: '⏱️ Contagem Decrescente',  description: 'Temporizador até ao jogo' },
-  { value: 'matches',           element: 'soccer-live-matches',           label: '📋 Lista de Jogos',        description: 'Lista de jogos por dia/jornada' },
-  { value: 'match-center',      element: 'soccer-live-match-center',      label: '🏟️ Central do Jogo',       description: 'Vista em abas do jogo, stats e timeline' },
+  { value: 'team',              element: 'soccer-live-team',              label: 'Próximo Jogo / Ao Vivo', description: 'Placar ao vivo, relógio, alinhamento e tempo' },
+  { value: 'standings',         element: 'soccer-live-standings',         label: 'Classificação',         description: 'Tabela classificativa da liga' },
+  { value: 'last-match',        element: 'soccer-live-last-match',        label: 'Último Jogo',            description: 'Resultado do último jogo terminado' },
+  { value: 'scorers',           element: 'soccer-live-scorers',           label: 'Melhores Marcadores',   description: 'Tabela dos melhores marcadores' },
+  { value: 'news',              element: 'soccer-live-news',              label: 'Notícias',              description: 'Feed de artigos e notícias' },
+  { value: 'bracket',           element: 'soccer-live-bracket',           label: 'Taça / Eliminatórias',  description: 'Árvore de eliminatórias e taças' },
+  { value: 'club',              element: 'soccer-live-club',              label: 'Perfil do Clube',       description: 'Perfil completo com plantel e transferências' },
+  { value: 'countdown',         element: 'soccer-live-countdown',         label: 'Contagem Decrescente',  description: 'Temporizador até ao jogo' },
+  { value: 'matches',           element: 'soccer-live-matches',           label: 'Lista de Jogos',        description: 'Lista de jogos por dia/jornada' },
+  { value: 'match-center',      element: 'soccer-live-match-center',      label: 'Central do Jogo',       description: 'Vista em abas do jogo, stats e timeline' },
 ];
 
 const TYPE_TO_ELEMENT = Object.fromEntries(CARD_REGISTRY.map(c => [c.value, c.element]));
@@ -133,7 +133,7 @@ class SoccerLiveCard extends HTMLElement {
     if (Array.isArray(this._config?.modules) && this._config.modules.length > 0) {
       return this._config.modules.filter(Boolean);
     }
-    const models = discoverSoccerModels(this._hass, this._config);
+    const models = discoverSoccerModels(this._hass, this._config) || {};
     const defaults = [];
     if (models.match_model) defaults.push({ id: 'mod_match', type: 'team', title: 'Próximo Jogo', entity: models.match_model });
     if (models.standings_model) defaults.push({ id: 'mod_standings', type: 'standings', title: 'Classificação', entity: models.standings_model });
@@ -142,8 +142,8 @@ class SoccerLiveCard extends HTMLElement {
     if (models.bracket_model) defaults.push({ id: 'mod_bracket', type: 'bracket', title: 'Taças', entity: models.bracket_model });
     if (models.club_model) defaults.push({ id: 'mod_club', type: 'club', title: 'Clube', entity: models.club_model });
 
-    if (!defaults.length && this._config?.entity) {
-      defaults.push({ id: 'mod_default', type: this._config.card_type || 'team', title: 'Futebol', entity: this._config.entity });
+    if (!defaults.length) {
+      defaults.push({ id: 'mod_default', type: 'team', title: 'Próximo Jogo', entity: this._config?.entity || '' });
     }
     return defaults;
   }
@@ -151,13 +151,19 @@ class SoccerLiveCard extends HTMLElement {
   _getGroupedModules() {
     const modules = this._getModules();
     const groups = new Map();
-    if (!Array.isArray(modules)) return groups;
+    if (!Array.isArray(modules)) {
+      groups.set('Geral', [{ id: 'mod_default', type: 'team', title: 'Próximo Jogo', entity: '' }]);
+      return groups;
+    }
     for (const mod of modules) {
       if (!mod) continue;
-      const teamName = mod.team || this._config.team || 'Geral';
+      const teamName = mod.team || this._config?.team || 'Geral';
       if (!groups.has(teamName)) groups.set(teamName, []);
       const list = groups.get(teamName);
       if (list) list.push(mod);
+    }
+    if (groups.size === 0) {
+      groups.set('Geral', [{ id: 'mod_default', type: 'team', title: 'Próximo Jogo', entity: '' }]);
     }
     return groups;
   }

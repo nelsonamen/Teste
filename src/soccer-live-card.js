@@ -372,8 +372,8 @@ class SoccerLiveCard extends HTMLElement {
 
     const modConfig = {
       skin: this._config.skin,
-      appearance: this._config.appearance,
-      palette: this._config.palette,
+      appearance: this._config.appearance || 'ha',
+      palette: this._config.palette || 'purple',
       language: this._config.language,
       ...mod,
       entity: resolvedEntity,

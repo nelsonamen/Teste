@@ -634,6 +634,7 @@ class SoccerLiveCardEditor extends LitElement {
           <div class="field-group">
             <label class="field-label">${this._t('editor.entity')}</label>
             <ha-entity-picker
+              .key=${selectedMod.entity || ''}
               .hass=${this.hass}
               .value=${selectedMod.entity || ''}
               .includeDomains=${['sensor']}

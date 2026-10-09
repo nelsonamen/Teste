@@ -252,11 +252,10 @@ class SoccerLiveCard extends HTMLElement {
     for (const mod of modules) {
       const btn = document.createElement('button');
       const isActive = mod.id === this._activeModuleId;
-      const icon = MODULE_TYPE_ICONS[mod.type] || '⚽';
       btn.style.cssText = `
-        background: ${isActive ? 'var(--primary-color, #03a9f4)' : 'var(--card-background-color, #ffffff)'};
+        background: ${isActive ? '#111111' : 'var(--card-background-color, #ffffff)'};
         color: ${isActive ? '#ffffff' : 'var(--primary-text-color, #000000)'};
-        border: 1px solid ${isActive ? 'var(--primary-color, #03a9f4)' : 'var(--divider-color, rgba(0,0,0,0.15))'};
+        border: 1px solid ${isActive ? '#111111' : 'var(--divider-color, rgba(0,0,0,0.15))'};
         border-radius: 10px;
         padding: 8px 14px;
         font-size: 13px;
@@ -264,11 +263,9 @@ class SoccerLiveCard extends HTMLElement {
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        box-shadow: ${isActive ? '0 2px 6px rgba(3,169,244,0.3)' : 'none'};
         transition: all 0.2s ease;
       `;
-      btn.innerHTML = `<span>${icon}</span> <span>${mod.title || mod.type}</span>`;
+      btn.textContent = mod.title || mod.type;
       btn.addEventListener('click', () => {
         this._activeModuleId = mod.id;
         this._renderCard();
@@ -582,14 +579,12 @@ class SoccerLiveCardEditor extends LitElement {
           ${modules.map((mod, index) => {
             const isSelected = index === selectedIdx;
             const numStr = String(index + 1).padStart(2, '0');
-            const icon = MODULE_TYPE_ICONS[mod.type] || '⚽';
             return html`
               <div
                 class="module-item ${isSelected ? 'selected' : ''}"
                 @click=${() => { this._selectedModuleIndex = index; this.requestUpdate(); }}
               >
                 <span class="module-num">${numStr}</span>
-                <span class="module-icon">${icon}</span>
                 <span class="module-title">${mod.title || mod.type}</span>
                 <div class="module-arrows" @click=${e => e.stopPropagation()}>
                   <button

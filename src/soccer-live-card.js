@@ -311,6 +311,28 @@ class SoccerLiveCard extends HTMLElement {
       el.hass = blendHassSources(this._hass, modConfig);
       el._isLoading = false;
     }
+
+    setTimeout(() => {
+      if (el.shadowRoot) {
+        const styleId = 'soccer-live-hub-flatten';
+        if (!el.shadowRoot.getElementById(styleId)) {
+          const style = document.createElement('style');
+          style.id = styleId;
+          style.textContent = `
+            ha-card {
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+          `;
+          el.shadowRoot.appendChild(style);
+        }
+      }
+    }, 50);
+
     return el;
   }
 

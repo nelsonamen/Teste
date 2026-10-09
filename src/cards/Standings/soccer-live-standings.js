@@ -1047,12 +1047,14 @@ class SoccerLiveStandingsCard extends LitElement {
         padding: 12px;
       }
       .group-cell {
-        background: var(--cl-card-2);
-        border: 1px solid var(--cl-divider);
-        border-radius: 14px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        margin-bottom: 16px;
       }
       .group-title {
         padding: 10px 14px;

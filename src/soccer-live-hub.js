@@ -862,3 +862,14 @@ if (!customElements.get('soccer-live-hub')) {
 if (!customElements.get('soccer-live-card')) {
   customElements.define('soccer-live-card', SoccerLiveCard);
 }
+
+window.customCards = window.customCards || [];
+if (!window.customCards.some(c => c.type === 'soccer-live-hub')) {
+  window.customCards.push({
+    type: 'soccer-live-hub',
+    name: 'Soccer Live Hub',
+    description: 'Modular football hub card with reorderable modules, tabs or stack layout.',
+    preview: false,
+    documentationURL: 'https://github.com/nelsonamen/Teste',
+  });
+}

@@ -1,29 +1,51 @@
-# ⚽ Soccer Live Card
+# ⚽ Soccer Live Card (Modular F1 Dashboard Hub)
 
-Beautiful, animated football cards for Home Assistant with multi-language support, extensive customization, offline caching, mobile responsiveness, and provider-neutral Soccer Live sensor support.
+Beautiful, animated football cards for Home Assistant with multi-language support, extensive customization, modular F1-style dashboard hub, two-tier team & module navigation, and provider-neutral Soccer Live sensor support.
 
 Companion for the [Soccer Live integration](https://github.com/rononline/soccerlive).
 
-**[Live preview →](https://rononline.github.io)** — all cards rendered with mock data, no Home Assistant needed.
-
-> Built on ideas from [Calcio Live Card](https://github.com/Bobsilvio/calcio-live-card) by @Bobsilvio
-
 ---
 
-## 🚀 Quick start
+## 🏎️/⚽ Modular F1 Dashboard Hub (`custom:soccer-live-hub`)
 
-1. Install the **[Soccer Live integration](https://github.com/rononline/soccerlive)** via HACS and add it: choose **ESPN** (free, no API key) → **Team** → your league and team (for example *Eredivisie → Feyenoord*).
-2. Install **Soccer Live Card** via HACS (see [Installation](#-installation-via-hacs) below).
-3. On your dashboard: **Add card → Soccer Live Card**.
-4. Select your team's **`next_*`** entity (`soccer_live_next_{competition}_{team}`) — that's the sensor the Team, Countdown and Match Center cards use.
-5. Done — the Team card renders automatically. Switch the **card type** in the editor to explore the others.
+The **Modular Hub Card** (`type: custom:soccer-live-hub`) brings a complete F1-style modular dashboard to Home Assistant:
 
-The editor also offers six **quick profiles**: Simple, Matchday, Live,
-Analysis, Club dashboard and Compact mobile. A profile chooses sensible card
-settings while retaining your entity, supplementary sources, language and
-appearance; the normal controls remain available afterwards.
+- **Two-Tier Navigation**: Top row for Teams/Countries (`FC Porto`, `Portugal`), Bottom row for Modules (`Próximo Jogo`, `Classificação`, `Último Jogo`, `Melhores Marcadores`).
+- **Module Manager**: Reorder modules (`↑`/`↓`), Add modules, Duplicate modules, Remove modules, and assign per-module entities/teams.
+- **Theme Modes**: Choose **Automatic** (follows Home Assistant theme), **Light**, or **Dark** with clean, high-contrast typography.
 
-![Team card](images/team.png)
+### Example YAML Configuration:
+
+```yaml
+type: custom:soccer-live-hub
+title: "Futebol Hub"
+layout: tabs                      # 'tabs' (navigation bar) or 'stack' (vertical list)
+appearance: ha                    # 'ha' (Automatic HA theme), 'light', or 'dark'
+modules:
+  - id: mod_1
+    type: team                    # Próximo Jogo / Ao Vivo
+    title: Próximo Jogo
+    team: FC Porto
+    entity: sensor.soccer_live_next_por_1_fc_porto
+
+  - id: mod_2
+    type: standings               # Classificação
+    title: Classificação
+    team: FC Porto
+    entity: sensor.soccer_live_standings_por_1
+
+  - id: mod_3
+    type: team                    # Próximo Jogo
+    title: Próximo Jogo
+    team: Portugal
+    entity: sensor.soccer_live_next_fifa_world_portugal
+
+  - id: mod_4
+    type: standings               # Classificação
+    title: Classificação
+    team: Portugal
+    entity: sensor.soccer_live_standings_fifa_world
+```
 
 ---
 

@@ -36,60 +36,60 @@ export const skinStyles = css`
   /* ============================ APPEARANCES (neutrals) ============================ */
   :host,
   :host([data-appearance="dark"]) {
-    --cl-bg: #12141f;
-    --cl-surface: rgba(var(--cl-accent-rgb),0.07);
-    --cl-surface-2: rgba(var(--cl-accent-rgb),0.13);
-    --cl-card-2: #1e2235;
-    --cl-divider: rgba(255,255,255,0.08);
+    --cl-bg: #111625;
+    --cl-surface: #1e293b;
+    --cl-surface-2: #334155;
+    --cl-card-2: #1e293b;
+    --cl-divider: rgba(255,255,255,0.10);
     --cl-glass-border: rgba(255,255,255,0.12);
-    --cl-text: #f4f6fb;
+    --cl-text: #ffffff;
     --cl-text-2: #94a3b8;
     --cl-shadow: rgba(0,0,0,0.45);
     --cl-overlay-strong: rgba(0,0,0,0.70);
     --cl-overlay-soft: rgba(0,0,0,0.35);
     --cl-bar-outline: rgba(255,255,255,0.14);
     --cl-bar-separator: rgba(255,255,255,0.25);
-    --cl-chip-bg: rgba(var(--cl-accent-rgb),0.14);
-    --cl-chip-border: rgba(var(--cl-accent-rgb),0.30);
-    --cl-toast-bg: #1e2235;
-    --cl-num-bg: #1e2235;
+    --cl-chip-bg: rgba(99,102,241,0.14);
+    --cl-chip-border: rgba(99,102,241,0.30);
+    --cl-toast-bg: #1e293b;
+    --cl-num-bg: #1e293b;
   }
 
   :host([data-appearance="light"]) {
-    --cl-bg: #f8fafc;
-    --cl-surface: rgba(var(--cl-accent-rgb),0.05);
-    --cl-surface-2: rgba(var(--cl-accent-rgb),0.10);
+    --cl-bg: #ffffff;
+    --cl-surface: #f8fafc;
+    --cl-surface-2: #f1f5f9;
     --cl-card-2: #ffffff;
-    --cl-divider: rgba(15,23,42,0.08);
-    --cl-glass-border: rgba(15,23,42,0.12);
+    --cl-divider: #e2e8f0;
+    --cl-glass-border: #cbd5e1;
     --cl-text: #0f172a;
     --cl-text-2: #64748b;
-    --cl-shadow: rgba(15,23,42,0.08);
+    --cl-shadow: rgba(15,23,42,0.06);
     --cl-overlay-strong: rgba(15,23,42,0.60);
     --cl-overlay-soft: rgba(15,23,42,0.20);
     --cl-bar-outline: rgba(15,23,42,0.18);
-    --cl-bar-separator: rgba(255,255,255,0.65);
-    --cl-chip-bg: rgba(var(--cl-accent-rgb),0.10);
-    --cl-chip-border: rgba(var(--cl-accent-rgb),0.22);
+    --cl-bar-separator: rgba(0,0,0,0.15);
+    --cl-chip-bg: rgba(99,102,241,0.08);
+    --cl-chip-border: rgba(99,102,241,0.20);
     --cl-toast-bg: #0f172a;
     --cl-num-bg: #ffffff;
   }
 
   :host([data-appearance="ha"]) {
     --cl-bg: var(--ha-card-background, var(--card-background-color, #1c1c1c));
-    --cl-surface: rgba(var(--cl-accent-rgb),0.08);
-    --cl-surface-2: rgba(var(--cl-accent-rgb),0.14);
+    --cl-surface: var(--secondary-background-color, rgba(127,127,127,0.08));
+    --cl-surface-2: var(--secondary-background-color, rgba(127,127,127,0.14));
     --cl-card-2: var(--secondary-background-color, rgba(127,127,127,0.10));
     --cl-divider: var(--divider-color, rgba(127,127,127,0.20));
     --cl-glass-border: var(--divider-color, rgba(127,127,127,0.22));
     --cl-text: var(--primary-text-color, #e1e1e1);
     --cl-text-2: var(--secondary-text-color, #9b9b9b);
-    --cl-shadow: rgba(0,0,0,0.30);
+    --cl-shadow: rgba(0,0,0,0.20);
     --cl-overlay-strong: rgba(0,0,0,0.55);
     --cl-overlay-soft: rgba(0,0,0,0.25);
     --cl-bar-outline: var(--divider-color, rgba(127,127,127,0.28));
     --cl-bar-separator: rgba(127,127,127,0.55);
-    --cl-chip-bg: rgba(var(--cl-accent-rgb),0.10);
+    --cl-chip-bg: rgba(99,102,241,0.10);
     --cl-chip-border: var(--divider-color, rgba(127,127,127,0.22));
     --cl-toast-bg: var(--card-background-color, #1c1c1c);
     --cl-num-bg: var(--card-background-color, #1c1c1c);

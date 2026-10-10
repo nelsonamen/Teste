@@ -787,9 +787,6 @@ class SoccerLiveCardEditor extends LitElement {
         margin-bottom: 14px;
       }
       .module-item {
-        date: ...;
-      }
-      .module-item {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -801,8 +798,84 @@ class SoccerLiveCardEditor extends LitElement {
         transition: all 0.2s ease;
       }
       .module-item.selected {
-        Project source: C:/Users/nelso/soccerlive-card/src/soccer-live-card.js
+        border: 2px solid #0284c7;
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+      }
+      .module-num {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+      }
+      .module-title {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+      }
+      .module-arrows {
+        display: flex;
+        gap: 4px;
+      }
+      .arrow-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        border: 1px solid var(--divider-color, rgba(0,0,0,0.15));
+        background: var(--card-background-color, #f8fafc);
+        color: var(--primary-text-color);
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .arrow-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      .add-module-wrap {
+        margin-top: 10px;
+      }
+      .module-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .btn {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .btn-secondary {
+        background: var(--card-background-color, #f1f5f9);
+        color: var(--primary-text-color);
+        border-color: var(--divider-color, #cbd5e1);
+      }
+      .btn-danger {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        border-color: rgba(220, 38, 38, 0.3);
       }
     `;
   }
+}
+
+if (!customElements.get('soccer-live-hub-editor')) {
+  customElements.define('soccer-live-hub-editor', SoccerLiveCardEditor);
+}
+
+// ─── Custom Card Registration ───────────────────────────────────────────────
+
+window.customCards = window.customCards || [];
+if (!window.customCards.some(c => c.type === 'soccer-live-hub')) {
+  window.customCards.push({
+    type: 'soccer-live-hub',
+    name: 'Soccer Live Hub Card (Modular)',
+    description: 'Modular football hub card with reorderable modules, tabs or stack layout.',
+    preview: false,
+    documentationURL: 'https://github.com/nelsonamen/Teste',
+  });
 }

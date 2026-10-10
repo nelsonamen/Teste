@@ -6,37 +6,37 @@ export const skinStyles = css`
   :host {
     /* Semantic, skin-independent colours. */
     --cl-green: #10b981;
-    --cl-gold: #fbbf24;
-    --cl-gold-glow: rgba(251,191,36,0.4);
-    --cl-gold-text: #fde047;
-    --cl-cl: var(--cl-accent);
+    --cl-gold: #f59e0b;
+    --cl-gold-glow: rgba(245,158,11,0.3);
+    --cl-gold-text: #f59e0b;
+    --cl-cl: #0284c7;
     --cl-el: #f97316;
     --cl-rel: #ef4444;
-    --cl-conf: #a855f7;
-    --cl-win: #22c55e;
-    --cl-draw: #94a3b8;
+    --cl-conf: #0284c7;
+    --cl-win: #10b981;
+    --cl-draw: #64748b;
     --cl-loss: #ef4444;
-    --cl-accent-soft: rgba(var(--cl-accent-rgb),0.12);
+    --cl-accent-soft: rgba(var(--cl-accent-rgb),0.10);
     --cl-accent-visible: var(--cl-accent);
   }
 
-  /* Default Clean Accent */
+  /* Clean Royal Blue / Slate Accent (NO PURPLE, NO PINK) */
   :host,
   :host([data-palette="purple"]),
   :host([data-palette="custom"]),
   :host([data-palette="team"]) {
-    --cl-accent: #6366f1;
-    --cl-accent-2: #ec4899;
-    --cl-accent-rgb: 99,102,241;
-    --cl-accent-2-rgb: 236,72,153;
+    --cl-accent: #0284c7;
+    --cl-accent-2: #0f172a;
+    --cl-accent-rgb: 2,132,199;
+    --cl-accent-2-rgb: 15,23,42;
     --cl-live: #ef4444;
-    --cl-live-glow: rgba(239,68,68,0.5);
+    --cl-live-glow: rgba(239,68,68,0.4);
   }
 
   /* ============================ APPEARANCES (neutrals) ============================ */
   :host,
   :host([data-appearance="dark"]) {
-    --cl-bg: #111625;
+    --cl-bg: #0f172a;
     --cl-surface: #1e293b;
     --cl-surface-2: #334155;
     --cl-card-2: #1e293b;
@@ -49,8 +49,8 @@ export const skinStyles = css`
     --cl-overlay-soft: rgba(0,0,0,0.35);
     --cl-bar-outline: rgba(255,255,255,0.14);
     --cl-bar-separator: rgba(255,255,255,0.25);
-    --cl-chip-bg: rgba(99,102,241,0.14);
-    --cl-chip-border: rgba(99,102,241,0.30);
+    --cl-chip-bg: rgba(2,132,199,0.14);
+    --cl-chip-border: rgba(2,132,199,0.30);
     --cl-toast-bg: #1e293b;
     --cl-num-bg: #1e293b;
   }
@@ -68,31 +68,31 @@ export const skinStyles = css`
     --cl-overlay-strong: rgba(15,23,42,0.60);
     --cl-overlay-soft: rgba(15,23,42,0.20);
     --cl-bar-outline: rgba(15,23,42,0.18);
-    --cl-bar-separator: rgba(0,0,0,0.15);
-    --cl-chip-bg: rgba(99,102,241,0.08);
-    --cl-chip-border: rgba(99,102,241,0.20);
+    --cl-bar-separator: rgba(0,0,0,0.12);
+    --cl-chip-bg: #f1f5f9;
+    --cl-chip-border: #e2e8f0;
     --cl-toast-bg: #0f172a;
     --cl-num-bg: #ffffff;
   }
 
   :host([data-appearance="ha"]) {
-    --cl-bg: var(--ha-card-background, var(--card-background-color, #1c1c1c));
-    --cl-surface: var(--secondary-background-color, rgba(127,127,127,0.08));
-    --cl-surface-2: var(--secondary-background-color, rgba(127,127,127,0.14));
-    --cl-card-2: var(--secondary-background-color, rgba(127,127,127,0.10));
-    --cl-divider: var(--divider-color, rgba(127,127,127,0.20));
-    --cl-glass-border: var(--divider-color, rgba(127,127,127,0.22));
-    --cl-text: var(--primary-text-color, #e1e1e1);
-    --cl-text-2: var(--secondary-text-color, #9b9b9b);
-    --cl-shadow: rgba(0,0,0,0.20);
+    --cl-bg: var(--ha-card-background, var(--card-background-color, #ffffff));
+    --cl-surface: var(--secondary-background-color, #f8fafc);
+    --cl-surface-2: var(--secondary-background-color, #f1f5f9);
+    --cl-card-2: var(--secondary-background-color, #ffffff);
+    --cl-divider: var(--divider-color, #e2e8f0);
+    --cl-glass-border: var(--divider-color, #cbd5e1);
+    --cl-text: var(--primary-text-color, #0f172a);
+    --cl-text-2: var(--secondary-text-color, #64748b);
+    --cl-shadow: rgba(0,0,0,0.08);
     --cl-overlay-strong: rgba(0,0,0,0.55);
     --cl-overlay-soft: rgba(0,0,0,0.25);
-    --cl-bar-outline: var(--divider-color, rgba(127,127,127,0.28));
-    --cl-bar-separator: rgba(127,127,127,0.55);
-    --cl-chip-bg: rgba(99,102,241,0.10);
-    --cl-chip-border: var(--divider-color, rgba(127,127,127,0.22));
-    --cl-toast-bg: var(--card-background-color, #1c1c1c);
-    --cl-num-bg: var(--card-background-color, #1c1c1c);
+    --cl-bar-outline: var(--divider-color, #e2e8f0);
+    --cl-bar-separator: rgba(0,0,0,0.12);
+    --cl-chip-bg: rgba(2,132,199,0.08);
+    --cl-chip-border: var(--divider-color, #e2e8f0);
+    --cl-toast-bg: var(--card-background-color, #0f172a);
+    --cl-num-bg: var(--card-background-color, #ffffff);
   }
 `;
 

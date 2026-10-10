@@ -178,6 +178,15 @@ export function resolveLang(hass, config) {
 export function t(key, lang = 'pt', vars = {}) {
   const l = TRANSLATIONS[lang] ? lang : (TRANSLATIONS['pt'] ? 'pt' : 'en');
   let str = TRANSLATIONS[l]?.[key] || TRANSLATIONS['en']?.[key] || key;
+  if (str === key) {
+    if (key === 'match.vs') return 'VS';
+    if (key === 'time.in_n_h') return 'em {n} h';
+    if (key === 'time.in_n_min') return 'em {n} min';
+    if (key === 'time.in_n_d') return 'em {n} dias';
+    if (key === 'status.live') return 'AO VIVO';
+    if (key === 'status.finished') return 'Terminado';
+    if (key === 'status.scheduled') return 'Agendado';
+  }
   for (const [k, v] of Object.entries(vars)) {
     str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
   }

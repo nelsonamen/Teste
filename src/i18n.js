@@ -12,6 +12,7 @@ const TRANSLATIONS = {
     'time.in_n_min': 'em {n} min',
     'time.in_n_h': 'em {n} h',
     'time.in_n_d': 'em {n} dias',
+    'time.in_duration': 'em {value}',
     'status.live': 'AO VIVO',
     'status.finished': 'Terminado',
     'status.scheduled': 'Agendado',
@@ -95,6 +96,7 @@ const TRANSLATIONS = {
     'time.in_n_min': 'in {n} min',
     'time.in_n_h': 'in {n} h',
     'time.in_n_d': 'in {n} days',
+    'time.in_duration': 'in {value}',
     'status.live': 'LIVE',
     'status.finished': 'Finished',
     'status.scheduled': 'Scheduled',
@@ -183,6 +185,9 @@ export function t(key, lang = 'pt', vars = {}) {
     if (key === 'time.in_n_h') return 'em {n} h';
     if (key === 'time.in_n_min') return 'em {n} min';
     if (key === 'time.in_n_d') return 'em {n} dias';
+    if (key === 'time.now') return 'Agora';
+    if (key === 'time.tomorrow') return 'Amanhã';
+    if (key === 'time.in_duration') return 'em {value}';
     if (key === 'status.live') return 'AO VIVO';
     if (key === 'status.finished') return 'Terminado';
     if (key === 'status.scheduled') return 'Agendado';
@@ -218,6 +223,6 @@ export function formatMatchDateFull(dateStr, lang = 'pt') {
   if (!d) return dateStr || '';
   const weekday = d.toLocaleDateString(lang === 'pt' ? 'pt-PT' : 'en-US', { weekday: 'long' });
   const date = d.toLocaleDateString(lang === 'pt' ? 'pt-PT' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const time = d.toLocaleTimeString([], { hour: '2-dates' }) || d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   return `${weekday} ${date} ${time}`;
 }

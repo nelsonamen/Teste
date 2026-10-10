@@ -877,12 +877,14 @@ if (!customElements.get('soccer-live-card')) {
 }
 
 window.customCards = window.customCards || [];
-if (!window.customCards.some(c => c.type === 'soccer-live-hub')) {
-  window.customCards.push({
-    type: 'soccer-live-hub',
-    name: 'Soccer Live Hub',
-    description: 'Modular football hub card with reorderable modules, tabs or stack layout.',
-    preview: false,
-    documentationURL: 'https://github.com/nelsonamen/Teste',
-  });
+for (const t of ['soccer-live-hub', 'custom:soccer-live-hub']) {
+  if (!window.customCards.some(c => c.type === t)) {
+    window.customCards.push({
+      type: t,
+      name: 'Soccer Live Hub',
+      description: 'Modular football hub card with reorderable modules, tabs or stack layout.',
+      preview: false,
+      documentationURL: 'https://github.com/nelsonamen/Teste',
+    });
+  }
 }

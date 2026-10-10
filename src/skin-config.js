@@ -1,148 +1,72 @@
-// Pure, lit-free skin configuration: the two independent axes (appearance and
-// palette), their options, and how a config resolves to them — including the
-// backwards-compatible mapping from the old single `skin` field.
+// Pure, lit-free skin configuration for Soccer Live Hub
 
-export const APPEARANCES = ['dark', 'light', 'ha'];
+export const APPEARANCES = ['ha', 'light', 'dark'];
 
-export const PALETTES = [
-  'purple', 'red-white', 'red-gold', 'blue-red', 'white-gold',
-  'classic', 'neon', 'gold', 'orange', 'blue', 'black-white',
-  'team', 'custom',
-];
+export const PALETTES = ['team', 'blue', 'custom'];
 
-// Editor option lists: [value, i18n-key]. Labels are localised in the editor.
 export const APPEARANCE_OPTIONS = [
-  ['dark', 'skin.appearance_dark'],
-  ['light', 'skin.appearance_light'],
   ['ha', 'skin.appearance_ha'],
+  ['light', 'skin.appearance_light'],
+  ['dark', 'skin.appearance_dark'],
 ];
 
 export const PALETTE_OPTIONS = [
-  ['purple', 'skin.palette_purple'],
-  ['red-white', 'skin.palette_red_white'],
-  ['red-gold', 'skin.palette_red_gold'],
-  ['blue-red', 'skin.palette_blue_red'],
-  ['white-gold', 'skin.palette_white_gold'],
-  ['blue', 'skin.palette_blue'],
-  ['orange', 'skin.palette_orange'],
-  ['black-white', 'skin.palette_black_white'],
-  ['classic', 'skin.palette_classic'],
-  ['neon', 'skin.palette_neon'],
-  ['gold', 'skin.palette_gold'],
   ['team', 'skin.palette_team'],
+  ['blue', 'skin.palette_blue'],
   ['custom', 'skin.palette_custom'],
 ];
 
-// Representative [accent, accent-2] colours per palette, for editor swatches.
-// team/custom are dynamic, so they show the default accent pair as a hint.
 export const PALETTE_SWATCHES = {
-  purple: ['#6366f1', '#ec4899'],
-  'red-white': ['#e50000', '#ff4444'],
-  'red-gold': ['#ef0107', '#c8a232'],
-  'blue-red': ['#004d98', '#a50044'],
-  'white-gold': ['#e2e8f0', '#c8a951'],
-  blue: ['#2563eb', '#60a5fa'],
-  orange: ['#f97316', '#fb923c'],
-  'black-white': ['#e2e8f0', '#111111'],
-  classic: ['#16a34a', '#22c55e'],
-  neon: ['#00e5ff', '#ff00aa'],
-  gold: ['#f59e0b', '#fcd34d'],
-  team: ['#6366f1', '#ec4899'],
-  custom: ['#6366f1', '#ec4899'],
+  team: ['#0284c7', '#0f172a'],
+  blue: ['#0284c7', '#0f172a'],
+  custom: ['#0284c7', '#0f172a'],
 };
 
-// Club-name aliases kept working: they map to the old single skin value.
-const SKIN_ALIASES = {
-  feyenoord: 'red-white',
-  arsenal: 'red-gold',
-  barcelona: 'blue-red',
-  'real-madrid': 'white-gold',
-};
-
-// Old single `skin` value -> the {appearance, palette} pair it now means.
 const LEGACY_SKIN_MAP = {
-  dark: { appearance: 'dark', palette: 'purple' },
+  dark: { appearance: 'dark', palette: 'blue' },
   light: { appearance: 'light', palette: 'blue' },
-  auto: { appearance: 'dark', palette: 'team' },
-  custom: { appearance: 'dark', palette: 'custom' },
-  'red-white': { appearance: 'dark', palette: 'red-white' },
-  'red-gold': { appearance: 'dark', palette: 'red-gold' },
-  'blue-red': { appearance: 'dark', palette: 'blue-red' },
-  'white-gold': { appearance: 'dark', palette: 'white-gold' },
-  classic: { appearance: 'dark', palette: 'classic' },
-  neon: { appearance: 'dark', palette: 'neon' },
-  gold: { appearance: 'dark', palette: 'gold' },
-  orange: { appearance: 'dark', palette: 'orange' },
-  blue: { appearance: 'dark', palette: 'blue' },
-  'black-white': { appearance: 'dark', palette: 'black-white' },
+  auto: { appearance: 'ha', palette: 'team' },
+  ha: { appearance: 'ha', palette: 'team' },
 };
 
-function legacyPair(config) {
-  const raw = config && typeof config.skin === 'string' ? config.skin.toLowerCase() : '';
-  const skin = SKIN_ALIASES[raw] || raw;
-  return LEGACY_SKIN_MAP[skin] || null;
-}
-
-/** Resolve the appearance axis (dark/light/ha) from config. Prefers the new
- * `appearance` field, else derives it from the legacy `skin`, else 'dark'. */
 export function resolveAppearance(config) {
   const a = config && typeof config.appearance === 'string' ? config.appearance.toLowerCase() : '';
   if (APPEARANCES.includes(a)) return a;
-  const legacy = legacyPair(config);
-  return legacy ? legacy.appearance : 'dark';
+  const legacy = config?.skin ? LEGACY_SKIN_MAP[config.skin.toLowerCase()] : null;
+  return legacy ? legacy.appearance : 'ha';
 }
 
-/** Resolve the palette axis from config. Prefers the new `palette` field, else
- * derives it from the legacy `skin`, else 'purple'. */
 export function resolvePalette(config) {
   const p = config && typeof config.palette === 'string' ? config.palette.toLowerCase() : '';
   if (PALETTES.includes(p)) return p;
-  const legacy = legacyPair(config);
-  if (legacy) return legacy.palette;
-  // No palette and no legacy skin: light defaults to blue, dark to purple.
-  return resolveAppearance(config) === 'light' ? 'blue' : 'purple';
+  const legacy = config?.skin ? LEGACY_SKIN_MAP[config.skin.toLowerCase()] : null;
+  return legacy ? legacy.palette : 'blue';
 }
 
-/** Palettes whose accent colours come from config/entity rather than CSS. */
 export function paletteUsesCustomColors(palette) {
   return palette === 'custom' || palette === 'team';
 }
 
-/**
- * Fill appearance/palette from the sensor's shared `card_defaults`, per field,
- * so a card that only sets one axis still inherits the other (e.g. a card with
- * `appearance: light` keeps the shared `palette: red-white`). A legacy `skin`
- * sets both axes, so it opts the card out of both shared values.
- */
 export function mergeCardDefaults(config, defaults) {
   const cfg = config || {};
   if (!defaults || typeof defaults !== 'object') return cfg;
-  const hasSkin = typeof cfg.skin === 'string';
   const out = { ...cfg };
-  if (cfg.appearance == null && !hasSkin && defaults.appearance) out.appearance = defaults.appearance;
-  if (cfg.palette == null && !hasSkin && defaults.palette) out.palette = defaults.palette;
+  if (cfg.appearance == null && defaults.appearance) out.appearance = defaults.appearance;
+  if (cfg.palette == null && defaults.palette) out.palette = defaults.palette;
   return out;
 }
 
-/** Effective compact mode: the card's explicit value wins; otherwise inherit
- * the sensor's shared card_defaults.compact. */
 export function resolveCompact(config, defaults) {
   if (config && config.compact !== undefined) return config.compact === true;
   return !!(defaults && defaults.compact === true);
 }
 
-/**
- * Build the config for migrating a legacy `skin` to explicit appearance+palette:
- * seed both axes from the effective values, apply the picked override, and drop
- * `skin` so it no longer shadows the new fields.
- */
 export function buildMigratedConfig(config, effectiveAppearance, effectivePalette, over) {
   const next = { ...(config || {}), appearance: effectiveAppearance, palette: effectivePalette, ...(over || {}) };
   delete next.skin;
   return next;
 }
 
-/** Next index in a radio group for an arrow/Home/End key (wraps around). */
 export function nextRadioIndex(idx, count, key) {
   if (count <= 0) return idx;
   if (key === 'Home') return 0;

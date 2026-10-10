@@ -34,20 +34,449 @@ const CARD_REGISTRY = [
 
 const TYPE_TO_ELEMENT = Object.fromEntries(CARD_REGISTRY.map(c => [c.value, c.element]));
 const LEGACY_ELEMENTS = new Set(CARD_REGISTRY.map(c => c.element));
-const CARD_TYPES      = CARD_REGISTRY.map(({ value, label, description }) => ({ value, label, description }));
-const CARD_EDITORS    = Object.fromEntries(CARD_REGISTRY.filter(c => c.editor).map(c => [c.value, c.editor]));
 
 function resolveElement(cardType) {
   return TYPE_TO_ELEMENT[cardType] || (LEGACY_ELEMENTS.has(cardType) ? cardType : 'soccer-live-team');
 }
 
-const MODULE_TYPE_ICONS = {
-  team: '⚽',
-  standings: '📊',
-  'last-match': '⏪',
-};
-
 const WRAPPER_TYPE = 'custom:soccer-live-hub';
+
+// ─── Modular Visual Editor ─────────────────────────────────────────────────────
+
+class SoccerLiveCardEditor extends LitElement {
+  static get properties() {
+    return {
+      hass: { type: Object },
+      _config: { type: Object },
+      _selectedModuleIndex: { type: Number },
+    };
+  }
+
+  constructor() {
+    super();
+    this._config = {};
+    this._selectedModuleIndex = 0;
+  }
+
+  setConfig(config) {
+    this._config = { ...(config || {}) };
+    if (!Array.isArray(this._config.modules) || this._config.modules.length === 0) {
+      const models = discoverSoccerModels(this.hass, this._config) || {};
+      const defaults = [];
+      if (models.match_model) defaults.push({ id: 'mod_match', type: 'team', title: 'Próximo Jogo', entity: models.match_model });
+      if (models.standings_model) defaults.push({ id: 'mod_standings', type: 'standings', title: 'Classificação', entity: models.standings_model });
+      if (models.last_match_model) defaults.push({ id: 'mod_last', type: 'last-match', title: 'Último Jogo', entity: models.last_match_model });
+
+      this._config.modules = defaults;
+    }
+    this.requestUpdate();
+  }
+
+  _t(key, vars) {
+    return t(key, resolveLang(this.hass, this._config), vars);
+  }
+
+  _dispatch(config) {
+    const nextConfig = { ...config, type: WRAPPER_TYPE };
+    this.dispatchEvent(new CustomEvent('config-changed', {
+      detail: { config: nextConfig },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  _moveModule(index, direction) {
+    const modules = [...(this._config.modules || [])];
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= modules.length) return;
+    const temp = modules[index];
+    modules[index] = modules[targetIdx];
+    modules[targetIdx] = temp;
+    this._selectedModuleIndex = targetIdx;
+    this._dispatch({ ...this._config, modules });
+  }
+
+  _addModule(type) {
+    if (!type) return;
+    const item = CARD_REGISTRY.find(c => c.value === type);
+    const title = item ? item.label : type;
+    const models = discoverSoccerModels(this.hass, this._config) || {};
+
+    let defaultEntity = '';
+    if (type === 'team') defaultEntity = models.match_model;
+    else if (type === 'standings') defaultEntity = models.standings_model;
+    else if (type === 'last-match') defaultEntity = models.last_match_model;
+
+    const newMod = {
+      id: `mod_${Date.now()}`,
+      type,
+      title,
+      entity: defaultEntity,
+    };
+    const modules = [...(this._config.modules || []), newMod];
+    this._selectedModuleIndex = modules.length - 1;
+    this._dispatch({ ...this._config, modules });
+  }
+
+  _duplicateModule(index) {
+    const modules = [...(this._config.modules || [])];
+    const source = modules[index];
+    if (!source) return;
+    const cloned = { ...source, id: `mod_${Date.now()}`, title: `${source.title} (Cópia)` };
+    modules.splice(index + 1, 0, cloned);
+    this._selectedModuleIndex = index + 1;
+    this._dispatch({ ...this._config, modules });
+  }
+
+  _removeModule(index) {
+    const modules = [...(this._config.modules || [])];
+    modules.splice(index, 1);
+    this._selectedModuleIndex = Math.max(0, index - 1);
+    this._dispatch({ ...this._config, modules });
+  }
+
+  _updateSelectedModule(key, value) {
+    const modules = (this._config.modules || []).map((mod, idx) => {
+      if (idx !== this._selectedModuleIndex) return mod;
+      const nextMod = { ...mod };
+      if (value === '' || value === null || value === undefined) {
+        delete nextMod[key];
+      } else {
+        nextMod[key] = value;
+      }
+      return nextMod;
+    });
+    this._dispatch({ ...this._config, modules });
+  }
+
+  _moduleTeamChanged(teamName) {
+    const modules = (this._config.modules || []).map((mod, idx) => {
+      if (idx !== this._selectedModuleIndex) return mod;
+      const nextMod = { ...mod, team: teamName };
+      if (!teamName) delete nextMod.team;
+      const models = discoverSoccerModels(this.hass, { ...this._config, team: teamName || this._config.team });
+      if (mod.type === 'team') nextMod.entity = models.match_model || mod.entity;
+      else if (mod.type === 'standings') nextMod.entity = models.standings_model || mod.entity;
+      else if (mod.type === 'last-match') nextMod.entity = models.last_match_model || mod.entity;
+      return nextMod;
+    });
+    this._dispatch({ ...this._config, modules });
+  }
+
+  render() {
+    const modules = this._config.modules || [];
+    const selectedIdx = Math.min(this._selectedModuleIndex, Math.max(0, modules.length - 1));
+    const selectedMod = modules[selectedIdx] || null;
+    const availableTeams = discoverSoccerTeams(this.hass);
+
+    return html`
+      <div class="editor-box card-box">
+        <div class="box-header">
+          <span class="badge badge-card">CARD</span>
+          <div class="box-title-group">
+            <span class="box-title">${this._t('editor.whole_card')}</span>
+            <span class="box-subtitle">${this._t('editor.whole_card_desc')}</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">${this._t('editor.card_title')}</label>
+          <input
+            type="text"
+            .value=${this._config.title || ''}
+            placeholder="ex. Futebol"
+            @change=${e => this._dispatch({ ...this._config, title: e.target.value })}
+          >
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">${this._t('editor.layout_mode')}</label>
+          <select
+            .value=${this._config.layout || 'tabs'}
+            @change=${e => this._dispatch({ ...this._config, layout: e.target.value })}
+          >
+            <option value="tabs" ?selected=${(this._config.layout || 'tabs') === 'tabs'}>${this._t('editor.layout_tabs')}</option>
+            <option value="stack" ?selected=${this._config.layout === 'stack'}>${this._t('editor.layout_stack')}</option>
+          </select>
+        </div>
+
+        <div class="field-group" style="margin-top: 16px; border-top: 1px solid var(--divider-color, rgba(0,0,0,0.1)); padding-top: 12px;">
+          ${renderAppearanceControl(this, this._config, k => this._t(k))}
+        </div>
+      </div>
+
+      <div class="editor-box module-box">
+        <div class="box-header">
+          <span class="badge badge-module">MODULE</span>
+          <div class="box-title-group">
+            <span class="box-title">${this._t('editor.selected_content')}</span>
+            <span class="box-subtitle">${this._t('editor.selected_content_desc')}</span>
+          </div>
+        </div>
+
+        <div class="modules-list">
+          ${modules.map((mod, index) => {
+            const isSelected = index === selectedIdx;
+            const numStr = String(index + 1).padStart(2, '0');
+            return html`
+              <div
+                class="module-item ${isSelected ? 'selected' : ''}"
+                @click=${() => { this._selectedModuleIndex = index; this.requestUpdate(); }}
+              >
+                <span class="module-num">${numStr}</span>
+                <span class="module-title">${mod.title || mod.type}</span>
+                <div class="module-arrows" @click=${e => e.stopPropagation()}>
+                  <button
+                    class="arrow-btn"
+                    ?disabled=${index === 0}
+                    @click=${() => this._moveModule(index, -1)}
+                  >↑</button>
+                  <button
+                    class="arrow-btn"
+                    ?disabled=${index === modules.length - 1}
+                    @click=${() => this._moveModule(index, 1)}
+                  >↓</button>
+                </div>
+              </div>
+            `;
+          })}
+        </div>
+
+        <div class="add-module-wrap">
+          <label class="field-label">${this._t('editor.add_module')}</label>
+          <select @change=${e => { this._addModule(e.target.value); e.target.value = ''; }}>
+            <option value="">${this._t('editor.choose_content')}</option>
+            ${CARD_REGISTRY.map(c => html`<option value=${c.value}>${c.label}</option>`)}
+          </select>
+        </div>
+      </div>
+
+      ${selectedMod ? html`
+        <div class="editor-box editing-box">
+          <div class="box-header">
+            <span class="badge badge-editing">${selectedIdx + 1}</span>
+            <div class="box-title-group">
+              <span class="box-title">${this._t('editor.editing_module', { current: selectedIdx + 1, total: modules.length })}</span>
+              <span class="box-subtitle">${this._t('editor.editing_module_desc')}</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Equipa do Módulo</label>
+            <select
+              .value=${selectedMod.team || this._config.team || ''}
+              @change=${e => this._moduleTeamChanged(e.target.value)}
+            >
+              <option value="">— Herdar equipa do cartão (${this._config.team || 'Geral'}) —</option>
+              ${availableTeams.map(t => html`
+                <option value=${t.name} ?selected=${(selectedMod.team || this._config.team) === t.name}>${t.name}</option>
+              `)}
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">${this._t('editor.module_title')}</label>
+            <input
+              type="text"
+              .value=${selectedMod.title || ''}
+              @change=${e => this._updateSelectedModule('title', e.target.value)}
+            >
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">${this._t('editor.entity')}</label>
+            <ha-entity-picker
+              .key=${selectedMod.entity || ''}
+              .hass=${this.hass}
+              .value=${selectedMod.entity || ''}
+              .includeDomains=${['sensor']}
+              allow-custom-entity
+              @value-changed=${e => this._updateSelectedModule('entity', e.detail?.value || '')}
+            ></ha-entity-picker>
+          </div>
+
+          <div class="module-actions">
+            <button class="btn btn-secondary" @click=${() => this._duplicateModule(selectedIdx)}>${this._t('editor.duplicate_module')}</button>
+            <button class="btn btn-danger" @click=${() => this._removeModule(selectedIdx)}>${this._t('editor.remove_module')}</button>
+          </div>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  static get styles() {
+    return css`
+      :host {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .editor-box {
+        border-radius: 12px;
+        padding: 16px;
+        background: var(--card-background-color, #ffffff);
+        border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      }
+      .card-box {
+        border: 2px solid #0284c7;
+        background: rgba(2, 132, 199, 0.03);
+      }
+      .module-box, .editing-box {
+        border: 2px solid #0284c7;
+        background: rgba(2, 132, 199, 0.03);
+      }
+      .box-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .badge {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        padding: 3px 8px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+      .badge-card {
+        border: 1.5px solid #0284c7;
+        color: #0284c7;
+      }
+      .badge-module {
+        border: 1.5px solid #0284c7;
+        color: #0284c7;
+      }
+      .badge-editing {
+        border: 1.5px solid #0284c7;
+        color: #0284c7;
+        padding: 2px 8px;
+      }
+      .box-title-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .box-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--primary-text-color);
+      }
+      .box-subtitle {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        margin-top: 2px;
+      }
+      .field-group {
+        margin-bottom: 12px;
+      }
+      .field-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: var(--secondary-text-color);
+      }
+      input[type="text"], select {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+        border-radius: 8px;
+        border: 1px solid var(--divider-color, rgba(0,0,0,0.15));
+        background: var(--card-background-color, #ffffff);
+        color: var(--primary-text-color);
+      }
+      ha-entity-picker {
+        display: block;
+        width: 100%;
+      }
+      .modules-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .module-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+        background: var(--card-background-color, #ffffff);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .module-item.selected {
+        border: 2px solid #0284c7;
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+      }
+      .module-num {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+      }
+      .module-title {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+      }
+      .module-arrows {
+        display: flex;
+        gap: 4px;
+      }
+      .arrow-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        border: 1px solid var(--divider-color, rgba(0,0,0,0.15));
+        background: var(--card-background-color, #f8fafc);
+        color: var(--primary-text-color);
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .arrow-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      .add-module-wrap {
+        margin-top: 10px;
+      }
+      .module-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .btn {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid transparent;
+      }
+      .btn-secondary {
+        background: var(--card-background-color, #f1f5f9);
+        color: var(--primary-text-color);
+        border-color: var(--divider-color, #cbd5e1);
+      }
+      .btn-danger {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        border-color: rgba(220, 38, 38, 0.3);
+      }
+    `;
+  }
+}
+
+if (!customElements.get('soccer-live-hub-editor')) {
+  customElements.define('soccer-live-hub-editor', SoccerLiveCardEditor);
+}
 
 // ─── Wrapper card (Modular Main Card) ─────────────────────────────────────────
 
@@ -425,457 +854,4 @@ if (!customElements.get('soccer-live-hub')) {
 }
 if (!customElements.get('soccer-live-card')) {
   customElements.define('soccer-live-card', SoccerLiveCard);
-}
-
-// ─── Modular Visual Editor ─────────────────────────────────────────────────────
-
-class SoccerLiveCardEditor extends LitElement {
-  static get properties() {
-    return {
-      hass: { type: Object },
-      _config: { type: Object },
-      _selectedModuleIndex: { type: Number },
-    };
-  }
-
-  constructor() {
-    super();
-    this._config = {};
-    this._selectedModuleIndex = 0;
-  }
-
-  setConfig(config) {
-    this._config = { ...(config || {}) };
-    if (!Array.isArray(this._config.modules) || this._config.modules.length === 0) {
-      const models = discoverSoccerModels(this.hass, this._config) || {};
-      const defaults = [];
-      if (models.match_model) defaults.push({ id: 'mod_match', type: 'team', title: 'Próximo Jogo', entity: models.match_model });
-      if (models.standings_model) defaults.push({ id: 'mod_standings', type: 'standings', title: 'Classificação', entity: models.standings_model });
-      if (models.last_match_model) defaults.push({ id: 'mod_last', type: 'last-match', title: 'Último Jogo', entity: models.last_match_model });
-
-      this._config.modules = defaults;
-    }
-    this.requestUpdate();
-  }
-
-  _t(key, vars) {
-    return t(key, resolveLang(this.hass, this._config), vars);
-  }
-
-  _dispatch(config) {
-    const nextConfig = { ...config, type: WRAPPER_TYPE };
-    this.dispatchEvent(new CustomEvent('config-changed', {
-      detail: { config: nextConfig },
-      bubbles: true,
-      composed: true,
-    }));
-  }
-
-  _moveModule(index, direction) {
-    const modules = [...(this._config.modules || [])];
-    const targetIdx = index + direction;
-    if (targetIdx < 0 || targetIdx >= modules.length) return;
-    const temp = modules[index];
-    modules[index] = modules[targetIdx];
-    modules[targetIdx] = temp;
-    this._selectedModuleIndex = targetIdx;
-    this._dispatch({ ...this._config, modules });
-  }
-
-  _addModule(type) {
-    if (!type) return;
-    const item = CARD_REGISTRY.find(c => c.value === type);
-    const title = item ? item.label : type;
-    const models = discoverSoccerModels(this.hass, this._config) || {};
-
-    let defaultEntity = '';
-    if (type === 'team') defaultEntity = models.match_model;
-    else if (type === 'standings') defaultEntity = models.standings_model;
-    else if (type === 'last-match') defaultEntity = models.last_match_model;
-
-    const newMod = {
-      id: `mod_${Date.now()}`,
-      type,
-      title,
-      entity: defaultEntity,
-    };
-    const modules = [...(this._config.modules || []), newMod];
-    this._selectedModuleIndex = modules.length - 1;
-    this._dispatch({ ...this._config, modules });
-  }
-
-  _duplicateModule(index) {
-    const modules = [...(this._config.modules || [])];
-    const source = modules[index];
-    if (!source) return;
-    const cloned = { ...source, id: `mod_${Date.now()}`, title: `${source.title} (Cópia)` };
-    modules.splice(index + 1, 0, cloned);
-    this._selectedModuleIndex = index + 1;
-    this._dispatch({ ...this._config, modules });
-  }
-
-  _removeModule(index) {
-    const modules = [...(this._config.modules || [])];
-    modules.splice(index, 1);
-    this._selectedModuleIndex = Math.max(0, index - 1);
-    this._dispatch({ ...this._config, modules });
-  }
-
-  _updateSelectedModule(key, value) {
-    const modules = (this._config.modules || []).map((mod, idx) => {
-      if (idx !== this._selectedModuleIndex) return mod;
-      const nextMod = { ...mod };
-      if (value === '' || value === null || value === undefined) {
-        delete nextMod[key];
-      } else {
-        nextMod[key] = value;
-      }
-      return nextMod;
-    });
-    this._dispatch({ ...this._config, modules });
-  }
-
-  _moduleTeamChanged(teamName) {
-    const modules = (this._config.modules || []).map((mod, idx) => {
-      if (idx !== this._selectedModuleIndex) return mod;
-      const nextMod = { ...mod, team: teamName };
-      if (!teamName) delete nextMod.team;
-      const models = discoverSoccerModels(this.hass, { ...this._config, team: teamName || this._config.team });
-      if (mod.type === 'team') nextMod.entity = models.match_model || mod.entity;
-      else if (mod.type === 'standings') nextMod.entity = models.standings_model || mod.entity;
-      else if (mod.type === 'last-match') nextMod.entity = models.last_match_model || mod.entity;
-      return nextMod;
-    });
-    this._dispatch({ ...this._config, modules });
-  }
-
-  render() {
-    const modules = this._config.modules || [];
-    const selectedIdx = Math.min(this._selectedModuleIndex, Math.max(0, modules.length - 1));
-    const selectedMod = modules[selectedIdx] || null;
-    const availableTeams = discoverSoccerTeams(this.hass);
-
-    return html`
-      <!-- WHOLE CARD SECTION -->
-      <div class="editor-box card-box">
-        <div class="box-header">
-          <span class="badge badge-card">CARD</span>
-          <div class="box-title-group">
-            <span class="box-title">${this._t('editor.whole_card')}</span>
-            <span class="box-subtitle">${this._t('editor.whole_card_desc')}</span>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">${this._t('editor.card_title')}</label>
-          <input
-            type="text"
-            .value=${this._config.title || ''}
-            placeholder="ex. Futebol"
-            @change=${e => this._dispatch({ ...this._config, title: e.target.value })}
-          >
-        </div>
-
-        <div class="field-group">
-          <label class="field-label">${this._t('editor.layout_mode')}</label>
-          <select
-            .value=${this._config.layout || 'tabs'}
-            @change=${e => this._dispatch({ ...this._config, layout: e.target.value })}
-          >
-            <option value="tabs" ?selected=${(this._config.layout || 'tabs') === 'tabs'}>${this._t('editor.layout_tabs')}</option>
-            <option value="stack" ?selected=${this._config.layout === 'stack'}>${this._t('editor.layout_stack')}</option>
-          </select>
-        </div>
-
-        <div class="field-group" style="margin-top: 16px; border-top: 1px solid var(--divider-color, rgba(0,0,0,0.1)); padding-top: 12px;">
-          ${renderAppearanceControl(this, this._config, k => this._t(k))}
-        </div>
-      </div>
-
-      <!-- MODULES MANAGEMENT SECTION -->
-      <div class="editor-box module-box">
-        <div class="box-header">
-          <span class="badge badge-module">MODULE</span>
-          <div class="box-title-group">
-            <span class="box-title">${this._t('editor.selected_content')}</span>
-            <span class="box-subtitle">${this._t('editor.selected_content_desc')}</span>
-          </div>
-        </div>
-
-        <div class="modules-list">
-          ${modules.map((mod, index) => {
-            const isSelected = index === selectedIdx;
-            const numStr = String(index + 1).padStart(2, '0');
-            return html`
-              <div
-                class="module-item ${isSelected ? 'selected' : ''}"
-                @click=${() => { this._selectedModuleIndex = index; this.requestUpdate(); }}
-              >
-                <span class="module-num">${numStr}</span>
-                <span class="module-title">${mod.title || mod.type}</span>
-                <div class="module-arrows" @click=${e => e.stopPropagation()}>
-                  <button
-                    class="arrow-btn"
-                    ?disabled=${index === 0}
-                    @click=${() => this._moveModule(index, -1)}
-                  >↑</button>
-                  <button
-                    class="arrow-btn"
-                    ?disabled=${index === modules.length - 1}
-                    @click=${() => this._moveModule(index, 1)}
-                  >↓</button>
-                </div>
-              </div>
-            `;
-          })}
-        </div>
-
-        <div class="add-module-wrap">
-          <label class="field-label">${this._t('editor.add_module')}</label>
-          <select @change=${e => { this._addModule(e.target.value); e.target.value = ''; }}>
-            <option value="">${this._t('editor.choose_content')}</option>
-            ${CARD_REGISTRY.map(c => html`<option value=${c.value}>${c.label}</option>`)}
-          </select>
-        </div>
-      </div>
-
-      <!-- EDITING SELECTED MODULE SECTION -->
-      ${selectedMod ? html`
-        <div class="editor-box editing-box">
-          <div class="box-header">
-            <span class="badge badge-editing">${selectedIdx + 1}</span>
-            <div class="box-title-group">
-              <span class="box-title">${this._t('editor.editing_module', { current: selectedIdx + 1, total: modules.length })}</span>
-              <span class="box-subtitle">${this._t('editor.editing_module_desc')}</span>
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">Equipa do Módulo</label>
-            <select
-              .value=${selectedMod.team || this._config.team || ''}
-              @change=${e => this._moduleTeamChanged(e.target.value)}
-            >
-              <option value="">— Herdar equipa do cartão (${this._config.team || 'Geral'}) —</option>
-              ${availableTeams.map(t => html`
-                <option value=${t.name} ?selected=${(selectedMod.team || this._config.team) === t.name}>${t.name}</option>
-              `)}
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">${this._t('editor.module_title')}</label>
-            <input
-              type="text"
-              .value=${selectedMod.title || ''}
-              @change=${e => this._updateSelectedModule('title', e.target.value)}
-            >
-          </div>
-
-          <div class="field-group">
-            <label class="field-label">${this._t('editor.entity')}</label>
-            <ha-entity-picker
-              .key=${selectedMod.entity || ''}
-              .hass=${this.hass}
-              .value=${selectedMod.entity || ''}
-              .includeDomains=${['sensor']}
-              allow-custom-entity
-              @value-changed=${e => this._updateSelectedModule('entity', e.detail?.value || '')}
-            ></ha-entity-picker>
-          </div>
-
-          <div class="module-actions">
-            <button class="btn btn-secondary" @click=${() => this._duplicateModule(selectedIdx)}>${this._t('editor.duplicate_module')}</button>
-            <button class="btn btn-danger" @click=${() => this._removeModule(selectedIdx)}>${this._t('editor.remove_module')}</button>
-          </div>
-        </div>
-      ` : ''}
-    `;
-  }
-
-  static get styles() {
-    return css`
-      :host {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      .editor-box {
-        border-radius: 12px;
-        padding: 16px;
-        background: var(--card-background-color, #ffffff);
-        border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
-      }
-      .card-box {
-        border: 2px solid #0284c7;
-        background: rgba(2, 132, 199, 0.03);
-      }
-      .module-box, .editing-box {
-        border: 2px solid #0284c7;
-        background: rgba(2, 132, 199, 0.03);
-      }
-      .box-header {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        margin-bottom: 14px;
-      }
-      .badge {
-        font-size: 10px;
-        font-weight: 800;
-        letter-spacing: 0.05em;
-        padding: 3px 8px;
-        border-radius: 6px;
-        text-transform: uppercase;
-        display: inline-block;
-      }
-      .badge-card {
-        border: 1.5px solid #0284c7;
-        color: #0284c7;
-      }
-      .badge-module {
-        border: 1.5px solid #0284c7;
-        color: #0284c7;
-      }
-      .badge-editing {
-        border: 1.5px solid #0284c7;
-        color: #0284c7;
-        padding: 2px 8px;
-      }
-      .box-title-group {
-        display: flex;
-        flex-direction: column;
-      }
-      .box-title {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--primary-text-color);
-      }
-      .box-subtitle {
-        font-size: 12px;
-        color: var(--secondary-text-color);
-        margin-top: 2px;
-      }
-      .field-group {
-        margin-bottom: 12px;
-      }
-      .field-label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: 4px;
-        color: var(--secondary-text-color);
-      }
-      input[type="text"], select {
-        box-sizing: border-box;
-        width: 100%;
-        padding: 10px 12px;
-        font-size: 14px;
-        border-radius: 8px;
-        border: 1px solid var(--divider-color, rgba(0,0,0,0.15));
-        background: var(--card-background-color, #ffffff);
-        color: var(--primary-text-color);
-      }
-      ha-entity-picker {
-        display: block;
-        width: 100%;
-      }
-      .modules-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 14px;
-      }
-      .module-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1px solid var(--divider-color, rgba(0,0,0,0.12));
-        background: var(--card-background-color, #ffffff);
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-      .module-item.selected {
-        border: 2px solid #0284c7;
-        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
-      }
-      .module-num {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--secondary-text-color);
-      }
-      .module-title {
-        flex: 1;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--primary-text-color);
-      }
-      .module-arrows {
-        display: flex;
-        gap: 4px;
-      }
-      .arrow-btn {
-        width: 30px;
-        height: 30px;
-        border-radius: 6px;
-        border: 1px solid var(--divider-color, rgba(0,0,0,0.15));
-        background: var(--card-background-color, #f8fafc);
-        color: var(--primary-text-color);
-        font-size: 13px;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .arrow-btn:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-      }
-      .add-module-wrap {
-        margin-top: 10px;
-      }
-      .module-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 16px;
-      }
-      .btn {
-        padding: 8px 16px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 8px;
-        cursor: pointer;
-        border: 1px solid transparent;
-      }
-      .btn-secondary {
-        background: var(--card-background-color, #f1f5f9);
-        color: var(--primary-text-color);
-        border-color: var(--divider-color, #cbd5e1);
-      }
-      .btn-danger {
-        background: rgba(220, 38, 38, 0.1);
-        color: #dc2626;
-        border-color: rgba(220, 38, 38, 0.3);
-      }
-    `;
-  }
-}
-
-if (!customElements.get('soccer-live-hub-editor')) {
-  customElements.define('soccer-live-hub-editor', SoccerLiveCardEditor);
-}
-
-// ─── Custom Card Registration ───────────────────────────────────────────────
-
-window.customCards = window.customCards || [];
-if (!window.customCards.some(c => c.type === 'soccer-live-hub')) {
-  window.customCards.push({
-    type: 'soccer-live-hub',
-    name: 'Soccer Live Hub',
-    description: 'Modular football hub card with reorderable modules, tabs or stack layout.',
-    preview: false,
-    documentationURL: 'https://github.com/nelsonamen/Teste',
-  });
 }

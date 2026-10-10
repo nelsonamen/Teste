@@ -178,35 +178,46 @@ export function discoverSoccerModels(hass, config = {}) {
 
     if (!matchesContext) continue;
 
-    if (sensorType === 'team_match' && (!models.match_model || models.match_model.includes('all_mixed'))) {
+    if (sensorType === 'team_match' || cleanId.includes('next')) {
       models.match_model = entityId;
     } else if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
       models.match_model = entityId;
     } else if (!models.standings_model && sensorType === 'standings') {
       models.standings_model = entityId;
-    } else if (!models.scorers_model && sensorType === 'top_scorers') {
-      models.scorers_model = entityId;
     } else if (!models.last_match_model && (sensorType === 'last_match' || cleanId.includes('last_match') || cleanId.includes('last'))) {
       models.last_match_model = entityId;
-    } else if (!models.news_model && sensorType === 'news') {
-      models.news_model = entityId;
-    } else if (!models.bracket_model && sensorType === 'bracket') {
-      models.bracket_model = entityId;
-    } else if (!models.club_model && sensorType === 'club') {
-      models.club_model = entityId;
     }
   }
 
-  // Fallback: if model is still empty, grab the first available team_match / standings sensor
-  if (!models.match_model || !models.standings_model) {
+  // Fallback: prioritize specific team_match / next sensors over mixed sensors
+  if (!models.match_model || models.match_model.includes('all_mixed') || models.match_model.includes('todos')) {
     for (const [entityId, stateObj] of Object.entries(hass.states)) {
       if (!entityId.startsWith('sensor.')) continue;
       const sensorType = stateObj?.attributes?.sensor_type || '';
-      if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
+      const cleanId = entityId.toLowerCase();
+      if (sensorType === 'team_match' || cleanId.includes('next')) {
         models.match_model = entityId;
+        break;
       }
-      if (!models.standings_model && sensorType === 'standings') {
+    }
+    if (!models.match_model) {
+      for (const [entityId, stateObj] of Object.entries(hass.states)) {
+        if (!entityId.startsWith('sensor.')) continue;
+        const sensorType = stateObj?.attributes?.sensor_type || '';
+        if (['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
+          models.match_model = entityId;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!models.standings_model) {
+    for (const [entityId, stateObj] of Object.entries(hass.states)) {
+      if (!entityId.startsWith('sensor.')) continue;
+      if (stateObj?.attributes?.sensor_type === 'standings') {
         models.standings_model = entityId;
+        break;
       }
     }
   }

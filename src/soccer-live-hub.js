@@ -864,9 +864,9 @@ if (!customElements.get('soccer-live-card')) {
 }
 
 window.customCards = window.customCards || [];
-if (!window.customCards.some(c => c.type === 'soccer-live-hub')) {
+if (!window.customCards.some(c => c.type === 'custom:soccer-live-hub')) {
   window.customCards.push({
-    type: 'soccer-live-hub',
+    type: 'custom:soccer-live-hub',
     name: 'Soccer Live Hub',
     description: 'Modular football hub card with reorderable modules, tabs or stack layout.',
     preview: false,

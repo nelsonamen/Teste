@@ -178,24 +178,24 @@ export function discoverSoccerModels(hass, config = {}) {
 
     if (!matchesContext) continue;
 
-    if (sensorType === 'team_match' || cleanId.includes('next')) {
+    if (['team_matches_mixed', 'team_matches'].includes(sensorType) || cleanId.includes('all_mixed') || cleanId.includes('todos')) {
       models.match_model = entityId;
-    } else if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
+    } else if (!models.match_model && sensorType === 'team_match') {
       models.match_model = entityId;
     } else if (!models.standings_model && sensorType === 'standings') {
       models.standings_model = entityId;
-    } else if (!models.last_match_model && (sensorType === 'last_match' || cleanId.includes('last_match') || cleanId.includes('last'))) {
+    } else if (!models.last_match_model && (sensorType === 'last_match' || cleanId.includes('last'))) {
       models.last_match_model = entityId;
     }
   }
 
-  // Fallback: prioritize specific team_match / next sensors over mixed sensors
-  if (!models.match_model || models.match_model.includes('all_mixed') || models.match_model.includes('todos')) {
+  // Fallback scan across all states if models still empty
+  if (!models.match_model) {
     for (const [entityId, stateObj] of Object.entries(hass.states)) {
       if (!entityId.startsWith('sensor.')) continue;
       const sensorType = stateObj?.attributes?.sensor_type || '';
       const cleanId = entityId.toLowerCase();
-      if (sensorType === 'team_match' || cleanId.includes('next')) {
+      if (['team_matches_mixed', 'team_matches'].includes(sensorType) || cleanId.includes('all_mixed') || cleanId.includes('todos')) {
         models.match_model = entityId;
         break;
       }
@@ -203,11 +203,22 @@ export function discoverSoccerModels(hass, config = {}) {
     if (!models.match_model) {
       for (const [entityId, stateObj] of Object.entries(hass.states)) {
         if (!entityId.startsWith('sensor.')) continue;
-        const sensorType = stateObj?.attributes?.sensor_type || '';
-        if (['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
+        if (stateObj?.attributes?.sensor_type === 'team_match') {
           models.match_model = entityId;
           break;
         }
+      }
+    }
+  }
+
+  if (!models.last_match_model) {
+    for (const [entityId, stateObj] of Object.entries(hass.states)) {
+      if (!entityId.startsWith('sensor.')) continue;
+      const sensorType = stateObj?.attributes?.sensor_type || '';
+      const cleanId = entityId.toLowerCase();
+      if (sensorType === 'last_match' || cleanId.includes('last')) {
+        models.last_match_model = entityId;
+        break;
       }
     }
   }

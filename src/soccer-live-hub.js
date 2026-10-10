@@ -557,10 +557,18 @@ class SoccerLiveCard extends HTMLElement {
         const stType = st?.attributes?.sensor_type;
         const cleanId = id.toLowerCase();
         const attrTeam = (st?.attributes?.team_name || st?.attributes?.team || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (stType === 'team_match' || cleanId.includes('next')) {
+        if (['team_matches_mixed', 'team_matches'].includes(stType) || cleanId.includes('all_mixed') || cleanId.includes('todos')) {
           if (!cleanTeam || cleanId.includes(cleanTeam) || attrTeam.includes(cleanTeam)) {
             return id;
           }
+        }
+      }
+      for (const [id, st] of Object.entries(this._hass?.states || {})) {
+        if (!id.startsWith('sensor.')) continue;
+        const stType = st?.attributes?.sensor_type;
+        const cleanId = id.toLowerCase();
+        if (['team_matches_mixed', 'team_matches'].includes(stType) || cleanId.includes('all_mixed') || cleanId.includes('todos')) {
+          return id;
         }
       }
       for (const [id, st] of Object.entries(this._hass?.states || {})) {
@@ -571,12 +579,33 @@ class SoccerLiveCard extends HTMLElement {
       }
     }
 
+    if (mod.type === 'last-match') {
+      const teamName = mod.team || this._config?.team || '';
+      const cleanTeam = teamName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      for (const [id, st] of Object.entries(this._hass?.states || {})) {
+        if (!id.startsWith('sensor.')) continue;
+        const stType = st?.attributes?.sensor_type;
+        const cleanId = id.toLowerCase();
+        const attrTeam = (st?.attributes?.team_name || st?.attributes?.team || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (stType === 'last_match' || cleanId.includes('last')) {
+          if (!cleanTeam || cleanId.includes(cleanTeam) || attrTeam.includes(cleanTeam)) {
+            return id;
+          }
+        }
+      }
+      for (const [id, st] of Object.entries(this._hass?.states || {})) {
+        if (!id.startsWith('sensor.')) continue;
+        if (st?.attributes?.sensor_type === 'last_match' || id.toLowerCase().includes('last')) {
+          return id;
+        }
+      }
+    }
+
     if (mod.entity && this._hass?.states?.[mod.entity]) {
       const stateObj = this._hass.states[mod.entity];
       const sensorType = stateObj?.attributes?.sensor_type;
       if (sensorType) {
         if (mod.type === 'standings' && sensorType === 'standings') return mod.entity;
-        if (mod.type === 'last-match' && (sensorType === 'last_match' || mod.entity.includes('last'))) return mod.entity;
       } else {
         return mod.entity;
       }

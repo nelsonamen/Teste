@@ -12,11 +12,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /i18n\.js$/,
-        include: path.resolve(__dirname, 'src/i18n.js'),
-        use: path.resolve(__dirname, 'scripts/compact-i18n-loader.cjs'),
-      },
-      {
         test: /\.js$/,
         include: path.resolve(__dirname, 'src'),
         use: path.resolve(__dirname, 'scripts/minify-lit-css-loader.cjs'),

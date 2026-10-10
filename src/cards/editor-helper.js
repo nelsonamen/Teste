@@ -197,6 +197,20 @@ export function discoverSoccerModels(hass, config = {}) {
     }
   }
 
+  // Fallback: if model is still empty, grab the first available team_match / standings sensor
+  if (!models.match_model || !models.standings_model) {
+    for (const [entityId, stateObj] of Object.entries(hass.states)) {
+      if (!entityId.startsWith('sensor.')) continue;
+      const sensorType = stateObj?.attributes?.sensor_type || '';
+      if (!models.match_model && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) {
+        models.match_model = entityId;
+      }
+      if (!models.standings_model && sensorType === 'standings') {
+        models.standings_model = entityId;
+      }
+    }
+  }
+
   return models;
 }
 

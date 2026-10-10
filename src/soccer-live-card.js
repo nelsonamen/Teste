@@ -7,15 +7,13 @@ import { applySkin } from './skins.js';
 // Core Card elements
 import './cards/Team/soccer-live-team.js';
 import './cards/Standings/soccer-live-standings.js';
-import './cards/Scorers/soccer-live-scorers.js';
 import './cards/LastMatch/soccer-live-last-match.js';
 
-// ─── Card type registry (Core 4 Modules) ──────────────────────────────────────
+// ─── Card type registry (Core 3 Modules) ──────────────────────────────────────
 
 const CARD_MODULES = {
   team: { editor: () => import('./cards/Team/soccer-live-team-editor.js') },
   standings: { editor: () => import('./cards/Standings/soccer-live-standings-editor.js') },
-  scorers: { editor: () => import('./cards/Scorers/soccer-live-scorers-editor.js') },
   'last-match': { editor: () => import('./cards/LastMatch/soccer-live-last-match-editor.js') },
 };
 
@@ -29,10 +27,9 @@ function loadCardModule(type, kind) {
 }
 
 const CARD_REGISTRY = [
-  { value: 'team',       element: 'soccer-live-team',       label: 'Próximo Jogo / Ao Vivo', description: 'Placar ao vivo, relógio, alinhamento e tempo' },
-  { value: 'standings',  element: 'soccer-live-standings',  label: 'Classificação',         description: 'Tabela classificativa da liga' },
-  { value: 'last-match', element: 'soccer-live-last-match', label: 'Último Jogo',            description: 'Resultado do último jogo terminado' },
-  { value: 'scorers',    element: 'soccer-live-scorers',    label: 'Melhores Marcadores',   description: 'Tabela dos melhores marcadores' },
+  { value: 'team',       element: 'soccer-live-team',       label: 'Próximo Jogo', description: 'Placar ao vivo, relógio, alinhamento e tempo' },
+  { value: 'standings',  element: 'soccer-live-standings',  label: 'Classificação', description: 'Tabela classificativa da liga' },
+  { value: 'last-match', element: 'soccer-live-last-match', label: 'Último Jogo',  description: 'Resultado do último jogo terminado' },
 ];
 
 const TYPE_TO_ELEMENT = Object.fromEntries(CARD_REGISTRY.map(c => [c.value, c.element]));
@@ -48,7 +45,6 @@ const MODULE_TYPE_ICONS = {
   team: '⚽',
   standings: '📊',
   'last-match': '⏪',
-  scorers: '🥇',
 };
 
 const WRAPPER_TYPE = 'custom:soccer-live-hub';
@@ -96,7 +92,6 @@ class SoccerLiveCard extends HTMLElement {
     if (models.match_model) defaults.push({ id: 'mod_match', type: 'team', title: 'Próximo Jogo', entity: models.match_model });
     if (models.standings_model) defaults.push({ id: 'mod_standings', type: 'standings', title: 'Classificação', entity: models.standings_model });
     if (models.last_match_model) defaults.push({ id: 'mod_last', type: 'last-match', title: 'Último Jogo', entity: models.last_match_model });
-    if (models.scorers_model) defaults.push({ id: 'mod_scorers', type: 'scorers', title: 'Melhores Marcadores', entity: models.scorers_model });
 
     if (!defaults.length) {
       defaults.push({ id: 'mod_default', type: 'team', title: 'Próximo Jogo', entity: this._config?.entity || '' });
@@ -131,7 +126,6 @@ class SoccerLiveCard extends HTMLElement {
       if (sensorType) {
         if (mod.type === 'team' && ['team_match', 'team_matches_mixed', 'team_matches'].includes(sensorType)) return mod.entity;
         if (mod.type === 'standings' && sensorType === 'standings') return mod.entity;
-        if (mod.type === 'scorers' && sensorType === 'top_scorers') return mod.entity;
         if (mod.type === 'last-match' && (sensorType === 'last_match' || mod.entity.includes('last'))) return mod.entity;
       } else {
         return mod.entity;
@@ -140,7 +134,6 @@ class SoccerLiveCard extends HTMLElement {
     const models = discoverSoccerModels(this._hass, this._config) || {};
     if (mod.type === 'team') return models.match_model || mod.entity;
     if (mod.type === 'standings') return models.standings_model || mod.entity;
-    if (mod.type === 'scorers') return models.scorers_model || mod.entity;
     if (mod.type === 'last-match') return models.last_match_model || mod.entity;
     return mod.entity || models.match_model;
   }
@@ -456,7 +449,6 @@ class SoccerLiveCardEditor extends LitElement {
       if (models.match_model) defaults.push({ id: 'mod_match', type: 'team', title: 'Próximo Jogo', entity: models.match_model });
       if (models.standings_model) defaults.push({ id: 'mod_standings', type: 'standings', title: 'Classificação', entity: models.standings_model });
       if (models.last_match_model) defaults.push({ id: 'mod_last', type: 'last-match', title: 'Último Jogo', entity: models.last_match_model });
-      if (models.scorers_model) defaults.push({ id: 'mod_scorers', type: 'scorers', title: 'Melhores Marcadores', entity: models.scorers_model });
 
       this._config.modules = defaults;
     }
@@ -496,7 +488,6 @@ class SoccerLiveCardEditor extends LitElement {
     let defaultEntity = '';
     if (type === 'team') defaultEntity = models.match_model;
     else if (type === 'standings') defaultEntity = models.standings_model;
-    else if (type === 'scorers') defaultEntity = models.scorers_model;
     else if (type === 'last-match') defaultEntity = models.last_match_model;
 
     const newMod = {
@@ -549,7 +540,6 @@ class SoccerLiveCardEditor extends LitElement {
       const models = discoverSoccerModels(this.hass, { ...this._config, team: teamName || this._config.team });
       if (mod.type === 'team') nextMod.entity = models.match_model || mod.entity;
       else if (mod.type === 'standings') nextMod.entity = models.standings_model || mod.entity;
-      else if (mod.type === 'scorers') nextMod.entity = models.scorers_model || mod.entity;
       else if (mod.type === 'last-match') nextMod.entity = models.last_match_model || mod.entity;
       return nextMod;
     });

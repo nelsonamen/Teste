@@ -5,12 +5,9 @@ const TerserPlugin = require('terser-webpack-plugin');
 module.exports = {
   entry: './src/soccer-live-card.js',
   output: {
-    filename: 'soccer-live-card.bundle.js',
+    filename: 'soccer-live-hub.bundle.js',
     path: path.resolve(__dirname, 'dist'),
   },
-  // Home Assistant 2024.8+ runs in evergreen browsers. Keeping native modern
-  // JavaScript avoids Babel helper/transformation overhead in the one HACS
-  // asset without excluding any browser supported by our declared HA minimum.
   target: ['web', 'es2022'],
   module: {
     rules: [
@@ -34,10 +31,6 @@ module.exports = {
         ecma: 2022,
         compress: {
           passes: 5,
-          // NOT booleans_as_integers: it rewrites `true`/`false` to `1`/`0`,
-          // which breaks booleans sent to strictly-typed Home Assistant APIs
-          // (e.g. `return_response: true` on the call_service WebSocket command,
-          // validated as a real bool — `1` is rejected).
           drop_debugger: true,
         },
         format: { comments: false },
@@ -46,10 +39,7 @@ module.exports = {
     })],
   },
   plugins: [
-    // Editor imports defer module execution, but HACS installs one plugin
-    // asset. Merge async chunks into that single distributable bundle.
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
   ],
-  // The explicit check-bundle-size script provides the actionable limit.
   performance: { hints: false },
 };

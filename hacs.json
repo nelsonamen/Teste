@@ -1,7 +1,7 @@
 {
-  "name": "Soccer Live Card",
+  "name": "Soccer Live Hub",
   "content_in_root": false,
-  "filename": "soccer-live-card.bundle.js",
+  "filename": "soccer-live-hub.bundle.js",
   "homeassistant": "2024.8.0",
   "render_readme": true
 }

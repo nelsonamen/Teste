@@ -1,33 +1,20 @@
 {
-  "name": "soccer-live-card",
-  "version": "3.59.1",
-  "description": "Football Live cards for Home Assistant",
+  "name": "soccer-live-hub",
+  "version": "1.0.0",
+  "description": "Modular Football Hub Card for Home Assistant",
   "main": "webpack.config.js",
   "scripts": {
     "build": "webpack && npm run check:bundle-size",
     "check:bundle-size": "node scripts/check-bundle-size.mjs",
-    "preview": "npm run build && python3 -m http.server 4173",
-    "smoke:preview": "node scripts/smoke-preview.mjs",
-    "smoke:i18n": "node scripts/smoke-i18n.mjs",
-    "check:playwright-sync": "node scripts/check-playwright-sync.mjs",
-    "test:unit": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON test/unit/*.test.mjs",
-    "test": "npm run check:playwright-sync && npm run test:unit && npm run smoke:i18n && npm run smoke:preview",
-    "test:visual": "npm run build && playwright test",
-    "test:visual:update": "npm run build && playwright test --update-snapshots"
+    "smoke:i18n": "node scripts/smoke-i18n.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rononline/soccerlive-card.git"
+    "url": "git+https://github.com/nelsonamen/Teste.git"
   },
-  "keywords": [],
-  "author": "",
   "license": "GPL-3.0-only",
-  "bugs": {
-    "url": "https://github.com/rononline/soccerlive-card/issues"
-  },
-  "homepage": "https://github.com/rononline/soccerlive-card#readme",
+  "homepage": "https://github.com/nelsonamen/Teste#readme",
   "devDependencies": {
-    "@playwright/test": "1.61.1",
     "acorn": "^8.18.0",
     "terser-webpack-plugin": "^5.6.1",
     "webpack": "^5.111.1",

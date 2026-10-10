@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-  entry: './src/soccer-live-card.js',
+  entry: './src/soccer-live-hub.js',
   output: {
     filename: 'soccer-live-hub.bundle.js',
     path: path.resolve(__dirname, 'dist'),

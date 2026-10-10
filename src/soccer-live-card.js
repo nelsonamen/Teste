@@ -200,6 +200,29 @@ class SoccerLiveCard extends HTMLElement {
     this._renderCard();
   }
 
+  _applyWrapperTheme(wrapper) {
+    if (!wrapper) return;
+    const appearance = this._config.appearance || 'ha';
+    if (appearance === 'dark') {
+      wrapper.style.background = '#111625';
+      wrapper.style.color = '#ffffff';
+      wrapper.style.setProperty('--primary-text-color', '#ffffff');
+      wrapper.style.setProperty('--card-background-color', '#111625');
+      wrapper.style.setProperty('--secondary-text-color', '#94a3b8');
+      wrapper.style.setProperty('--divider-color', 'rgba(255,255,255,0.12)');
+    } else if (appearance === 'light') {
+      wrapper.style.background = '#ffffff';
+      wrapper.style.color = '#0f172a';
+      wrapper.style.setProperty('--primary-text-color', '#0f172a');
+      wrapper.style.setProperty('--card-background-color', '#ffffff');
+      wrapper.style.setProperty('--secondary-text-color', '#64748b');
+      wrapper.style.setProperty('--divider-color', 'rgba(0,0,0,0.10)');
+    } else { // 'ha' or 'auto'
+      wrapper.style.background = 'var(--ha-card-background, var(--card-background-color, #1c1c1c))';
+      wrapper.style.color = 'var(--primary-text-color, #ffffff)';
+    }
+  }
+
   _renderCard() {
     const modules = this._getModules();
     const layout = this._config.layout || 'tabs';
@@ -231,18 +254,19 @@ class SoccerLiveCard extends HTMLElement {
       const wrapper = document.createElement('ha-card');
       wrapper.className = 'soccer-live-hub-wrapper';
       wrapper.style.cssText = 'border-radius: 20px; overflow: hidden; padding: 0;';
+      this._applyWrapperTheme(wrapper);
 
       if (this._config.title) {
         const header = document.createElement('div');
         header.className = 'soccer-live-card-title';
-        header.style.cssText = 'font-size:16px;font-weight:700;padding:12px 16px 4px;color:var(--primary-text-color,#fff);';
+        header.style.cssText = 'font-size:16px;font-weight:700;padding:12px 16px 4px;';
         header.textContent = this._config.title;
         wrapper.appendChild(header);
       }
 
       this._tabBar = document.createElement('div');
       this._tabBar.className = 'soccer-live-hub-tab-bar';
-      this._tabBar.style.cssText = 'display:flex;flex-direction:column;background:var(--card-background-color,rgba(0,0,0,0.03));border-bottom:1px solid var(--divider-color,rgba(0,0,0,0.08));';
+      this._tabBar.style.cssText = 'display:flex;flex-direction:column;border-bottom:1px solid var(--divider-color,rgba(0,0,0,0.08));';
 
       this._contentContainer = document.createElement('div');
       this._contentContainer.className = 'soccer-live-hub-content';
@@ -250,6 +274,9 @@ class SoccerLiveCard extends HTMLElement {
       wrapper.appendChild(this._tabBar);
       wrapper.appendChild(this._contentContainer);
       this.appendChild(wrapper);
+    } else {
+      const wrapper = this.querySelector('.soccer-live-hub-wrapper');
+      if (wrapper) this._applyWrapperTheme(wrapper);
     }
 
     const groups = this._getGroupedModules();
@@ -275,6 +302,18 @@ class SoccerLiveCard extends HTMLElement {
     if (!this._tabBar) return;
     this._tabBar.innerHTML = '';
 
+    const appearance = this._config.appearance || 'ha';
+    const isDark = appearance === 'dark';
+    const isLight = appearance === 'light';
+
+    const bgInactive = isDark ? '#1e293b' : (isLight ? '#ffffff' : 'var(--card-background-color, #ffffff)');
+    const textInactive = isDark ? '#f8fafc' : (isLight ? '#0f172a' : 'var(--primary-text-color, #000000)');
+    const borderInactive = isDark ? 'rgba(255,255,255,0.15)' : (isLight ? 'rgba(0,0,0,0.15)' : 'var(--divider-color, rgba(0,0,0,0.15))');
+
+    const bgActive = isDark ? '#ffffff' : (isLight ? '#0f172a' : 'var(--primary-text-color, #000000)');
+    const textActive = isDark ? '#0f172a' : (isLight ? '#ffffff' : 'var(--card-background-color, #ffffff)');
+    const borderActive = isDark ? '#ffffff' : (isLight ? '#0f172a' : 'var(--primary-text-color, #000000)');
+
     const groups = this._getGroupedModules();
     const teams = [...groups.keys()];
 
@@ -292,14 +331,14 @@ class SoccerLiveCard extends HTMLElement {
     // ─── TIER 1: Teams Selector (F1 Style Top Row) ───────────────────────────
     if (teams.length > 1) {
       const teamsRow = document.createElement('div');
-      teamsRow.style.cssText = 'display:flex;gap:10px;padding:12px 16px;background:var(--card-background-color,rgba(0,0,0,0.03));border-bottom:1px solid var(--divider-color,rgba(0,0,0,0.08));overflow-x:auto;scrollbar-width:none;align-items:center;';
+      teamsRow.style.cssText = `display:flex;gap:10px;padding:12px 16px;background:${isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'};border-bottom:1px solid ${borderInactive};overflow-x:auto;scrollbar-width:none;align-items:center;`;
       for (const team of teams) {
         const isTeamActive = team === this._activeTeam;
         const btn = document.createElement('button');
         btn.style.cssText = `
-          background: var(--card-background-color, #ffffff);
-          color: var(--primary-text-color);
-          border: ${isTeamActive ? '2px solid var(--primary-text-color, #111111)' : '1px solid var(--divider-color, rgba(0,0,0,0.15))'};
+          background: ${isTeamActive ? bgActive : bgInactive};
+          color: ${isTeamActive ? textActive : textInactive};
+          border: ${isTeamActive ? `2px solid ${borderActive}` : `1px solid ${borderInactive}`};
           padding: ${isTeamActive ? '7px 15px' : '8px 16px'};
           font-size: 13px;
           font-weight: ${isTeamActive ? '700' : '500'};
@@ -307,7 +346,7 @@ class SoccerLiveCard extends HTMLElement {
           text-transform: uppercase;
           cursor: pointer;
           border-radius: 10px;
-          box-shadow: ${isTeamActive ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : 'none'};
+          box-shadow: ${isTeamActive ? '0 4px 6px -1px rgba(0, 0, 0, 0.15)' : 'none'};
           transition: all 0.2s ease;
           white-space: nowrap;
         `;
@@ -325,14 +364,14 @@ class SoccerLiveCard extends HTMLElement {
 
     // ─── TIER 2: Modules Selector (Bottom Row for Active Team) ────────────────
     const modulesRow = document.createElement('div');
-    modulesRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:var(--card-background-color,rgba(0,0,0,0.01));align-items:center;';
+    modulesRow.style.cssText = `display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:${isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'};align-items:center;`;
     for (const mod of teamModules) {
       const isModActive = mod.id === this._activeModuleId;
       const btn = document.createElement('button');
       btn.style.cssText = `
-        background: var(--card-background-color, #ffffff);
-        color: var(--primary-text-color);
-        border: ${isModActive ? '2px solid var(--primary-text-color, #111111)' : '1px solid var(--divider-color, rgba(0,0,0,0.15))'};
+        background: ${isModActive ? bgActive : bgInactive};
+        color: ${isModActive ? textActive : textInactive};
+        border: ${isModActive ? `2px solid ${borderActive}` : `1px solid ${borderInactive}`};
         border-radius: 10px;
         padding: ${isModActive ? '7px 13px' : '8px 14px'};
         font-size: 12px;
@@ -341,7 +380,7 @@ class SoccerLiveCard extends HTMLElement {
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        box-shadow: ${isModActive ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : 'none'};
+        box-shadow: ${isModActive ? '0 4px 6px -1px rgba(0, 0, 0, 0.15)' : 'none'};
         transition: all 0.2s ease;
       `;
       btn.textContent = mod.title || mod.type;

@@ -423,6 +423,9 @@ class SoccerLiveCard extends HTMLElement {
 if (!customElements.get('soccer-live-hub')) {
   customElements.define('soccer-live-hub', SoccerLiveCard);
 }
+if (!customElements.get('soccer-live-card')) {
+  customElements.define('soccer-live-card', SoccerLiveCard);
+}
 
 // ─── Modular Visual Editor ─────────────────────────────────────────────────────
 

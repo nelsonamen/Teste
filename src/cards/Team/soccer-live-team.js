@@ -1303,16 +1303,16 @@ class SoccerLiveTeamCard extends LitElement {
   static get styles() {
     return [skinStyles, soccerHeaderStyles, matchMetaStyles, spinnerStyles, weatherBadgeStyles, prematchStyles, css`
       :host {
-        --cl-accent: #6366f1;
-        --cl-accent-2: #ec4899;
+        --cl-accent: #0284c7;
+        --cl-accent-2: #0f172a;
         --cl-live: #ef4444;
-        --cl-live-glow: rgba(239,68,68,0.5);
+        --cl-live-glow: rgba(239,68,68,0.4);
         --cl-green: #10b981;
-        --cl-gold: #fbbf24;
-        --cl-gold-text: #fde047;
-        --cl-card-2: rgba(255,255,255,0.05);
-        --cl-divider: rgba(255,255,255,0.08);
-        --cl-glass-border: rgba(255,255,255,0.08);
+        --cl-gold: #f59e0b;
+        --cl-gold-text: #f59e0b;
+        --cl-card-2: rgba(0,0,0,0.03);
+        --cl-divider: rgba(0,0,0,0.08);
+        --cl-glass-border: rgba(0,0,0,0.08);
       }
 
       ha-card {
@@ -1320,8 +1320,8 @@ class SoccerLiveTeamCard extends LitElement {
         overflow: hidden;
         border-radius: 20px;
         padding: 0;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-        background: var(--cl-bg);
+        box-shadow: none;
+        background: transparent;
         color: var(--cl-text);
       }
       ha-card.empty {
@@ -1330,44 +1330,8 @@ class SoccerLiveTeamCard extends LitElement {
         color: var(--cl-text-2);
       }
 
-      .bg-logos {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        pointer-events: none;
-        overflow: hidden;
-        z-index: 0;
-      }
-      .bg-logo {
-        width: 60%;
-        height: 140%;
-        display: flex;
-        align-items: center;
-        opacity: 0.09;
-      }
-      .bg-logo.home {
-        justify-content: flex-start;
-        transform: translateX(-30%);
-      }
-      .bg-logo.away {
-        justify-content: flex-end;
-        transform: translateX(30%);
-      }
-      .bg-logo img {
-        width: 100%;
-        object-fit: contain;
-      }
-
-      .hero-bg {
-        position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(ellipse at 0% 0%, rgba(var(--cl-accent-rgb),0.20), transparent 50%),
-          radial-gradient(ellipse at 100% 100%, rgba(var(--cl-accent-2-rgb),0.20), transparent 50%);
-        pointer-events: none;
-        z-index: 1;
+      .bg-logos, .hero-bg {
+        display: none !important;
       }
       ha-card.live .hero-bg {
         background:

@@ -27,9 +27,6 @@ export const renderSoccerHeader = ({ logo, title, badge = null, fallbackIcon = '
 `;
 };
 
-/**
- * Standard badge variants: 'live' | 'ft' | 'date' | 'neutral'
- */
 export const renderSoccerBadge = (text, variant = 'date') => html`
   <span class="sh-badge ${variant}">${text}</span>
 `;
@@ -40,7 +37,8 @@ export const soccerHeaderStyles = css`
     align-items: center;
     justify-content: space-between;
     padding: 14px 18px;
-    border-bottom: 1px solid var(--cl-divider, rgba(255,255,255,0.08));
+    background: transparent;
+    border-bottom: 1px solid var(--cl-divider, rgba(0,0,0,0.08));
   }
   .competition {
     display: flex;
@@ -57,12 +55,12 @@ export const soccerHeaderStyles = css`
     width: 24px;
     height: 24px;
     border-radius: 8px;
-    background: linear-gradient(135deg, var(--cl-accent, #6366f1), var(--cl-accent-2, #8b5cf6));
+    background: var(--cl-surface, #f8fafc);
+    border: 1px solid var(--cl-divider, rgba(0,0,0,0.08));
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    box-shadow: 0 2px 8px rgba(var(--cl-accent-rgb, 99 102 241), 0.4);
     overflow: hidden;
   }
   .comp-icon img {
@@ -75,7 +73,6 @@ export const soccerHeaderStyles = css`
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* Badge variants */
   .sh-badge {
     flex-shrink: 0;
     padding: 5px 11px;
@@ -85,7 +82,7 @@ export const soccerHeaderStyles = css`
     letter-spacing: 0.06em;
   }
   .sh-badge.live    { background: #e53935; color: #fff; }
-  .sh-badge.ft      { background: var(--cl-card-2, rgba(0,0,0,0.35)); border: 1px solid var(--cl-glass-border, rgba(255,255,255,0.1)); color: var(--cl-text, #fff); }
-  .sh-badge.date    { background: var(--cl-card-2, rgba(0,0,0,0.35)); border: 1px solid var(--cl-glass-border, rgba(255,255,255,0.1)); color: var(--cl-text, #fff); }
-  .sh-badge.neutral { background: var(--cl-surface, rgba(255,255,255,0.08)); color: var(--cl-text-2, #94a3b8); }
+  .sh-badge.ft      { background: var(--cl-surface, rgba(0,0,0,0.05)); border: 1px solid var(--cl-divider, rgba(0,0,0,0.1)); color: var(--cl-text, #0f172a); }
+  .sh-badge.date    { background: var(--cl-surface, rgba(0,0,0,0.05)); border: 1px solid var(--cl-divider, rgba(0,0,0,0.1)); color: var(--cl-text, #0f172a); }
+  .sh-badge.neutral { background: var(--cl-surface, rgba(0,0,0,0.05)); color: var(--cl-text-2, #64748b); }
 `;

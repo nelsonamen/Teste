@@ -843,7 +843,14 @@ class SoccerLiveCard extends HTMLElement {
   getCardSize() { return 8; }
 
   static getConfigElement() {
-    return document.createElement('soccer-live-hub-editor');
+    const el = document.createElement('soccer-live-hub-editor');
+    if (el && typeof el.setConfig !== 'function') {
+      el.setConfig = function(config) {
+        this._config = config;
+        if (typeof this.requestUpdate === 'function') this.requestUpdate();
+      };
+    }
+    return el;
   }
 
   static getStubConfig() { return { title: 'Futebol', layout: 'tabs', modules: [] }; }
